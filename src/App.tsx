@@ -294,8 +294,15 @@ function ContactPage() {
       <div className="content-header"><span /><span>Contact</span><span /></div>
       <div className="text-body">
         <p>For inquiries regarding the archive, font licensing, submissions, or collaborations, please reach out by email.</p>
-        <p><a href="mailto:hello@whatif.o" className="text-link">hello@whatif.o</a></p>
-        <p>Response time is typically within 2–3 business days.</p>
+        <p>
+          Jun-Yong Lee<br />
+          Graduate School of Techno Design, Kookmin University<br />
+          Convergence Design
+        </p>
+        <p>
+          +82 10 8249-3865<br />
+          <a href="mailto:wnsdydtml@gmail.com" className="text-link">wnsdydtml@gmail.com</a>
+        </p>
         <p className="contact-note">To submit a character: send your site URL or thumbnail along with character name, category, and year.</p>
       </div>
     </Fade>
