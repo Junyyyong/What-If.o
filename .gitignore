@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# interaction 빌드 파일은 예외 (Vercel 배포용)
+!public/interaction/**/dist
+!public/interaction/**/dist/**
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
