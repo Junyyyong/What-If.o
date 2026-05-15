@@ -320,7 +320,7 @@ export default function App() {
       <div className="absolute top-8 text-xs font-bold tracking-widest text-gray-400 animate-pulse">
         {isMouseDown ? "FOLLOW MODE" : "CLOCK MODE (CLICK AND HOLD TO FOLLOW)"}
       </div>
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-x-6 gap-y-20 mt-12 w-full pl-[320px] pr-12 place-items-center">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-x-6 gap-y-20 mt-12 w-full px-12 place-items-center">
         {TIMEZONES.map(tz => (
           <Clock
             key={tz.value}

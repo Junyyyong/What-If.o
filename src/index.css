@@ -237,11 +237,12 @@ button, select, input {
   left: 20px;
   background: none;
   border: none;
-  color: #000;
+  color: #fff;
   font-size: 18px;
   cursor: pointer;
-  opacity: .5;
+  opacity: .8;
   z-index: 9001;
+  mix-blend-mode: difference;
 }
 .ix-close:hover { opacity: 1; }
 
