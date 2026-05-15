@@ -1,0 +1,5 @@
+{
+  "name": "Monochrome Character Clock",
+  "description": "An interactive clock featuring a character's face with asymmetrical eyes that indicate the hour and minute.",
+  "requestFramePermissions": []
+}

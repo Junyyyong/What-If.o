@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { characters as staticCharacters } from './data/characters';
 import { fonts } from './data/fonts';
+import { interactions } from './data/interactions';
 import type { Character } from './data/characters';
 import { GOOGLE_SHEET_URL } from './config';
 
@@ -56,7 +57,7 @@ function useCharacters(): Character[] {
   return chars;
 }
 
-type Page = 'archive' | 'preview' | 'font' | 'about' | 'contact';
+type Page = 'archive' | 'preview' | 'interaction' | 'font' | 'about' | 'contact';
 type Sort  = 'alphabetical' | 'chronological';
 
 const CATEGORIES = ['All', 'Hero', 'Villain', 'Support', 'Neutral'] as const;
@@ -197,6 +198,40 @@ function PreviewPage({ open, search, category, characters }: {
   );
 }
 
+// ─── Interaction ──────────────────────────────────────────────────────────────
+function InteractionPage() {
+  const [active, setActive] = useState<string | null>(null);
+
+  return (
+    <Fade>
+      <div className="content-header">
+        <span className="sort-btn on">listing</span>
+        <span>Interaction: directory listing</span>
+        <span />
+      </div>
+      <div className="archive-cols" style={{ columns: 3 }}>
+        {interactions.map(item => (
+          <div key={item.id} className="arc-entry clickable"
+            onClick={() => setActive(item.path)}>
+            <span>{item.title}</span>
+          </div>
+        ))}
+      </div>
+
+      <AnimatePresence>
+        {active && (
+          <motion.div className="ix-backdrop"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}>
+            <iframe src={active} className="ix-frame" title="interaction" />
+            <button className="lb-close" onClick={() => setActive(null)}>✕</button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </Fade>
+  );
+}
+
 // ─── Font ─────────────────────────────────────────────────────────────────────
 function FontPage() {
   const [previewText, setPreviewText] = useState('');
@@ -295,17 +330,22 @@ export default function App() {
         <button className={`nav-btn${page === 'preview' ? ' active' : ''}`} onClick={() => setPage('preview')}>Preview</button>
       </div>
 
-      {/* Row 4: Font */}
+      {/* Row 4: Interaction */}
+      <div className="nav-row">
+        <button className={`nav-btn${page === 'interaction' ? ' active' : ''}`} onClick={() => setPage('interaction')}>Interaction</button>
+      </div>
+
+      {/* Row 5: Font */}
       <div className="nav-row">
         <button className={`nav-btn${page === 'font' ? ' active' : ''}`} onClick={() => setPage('font')}>Font</button>
       </div>
 
-      {/* Row 5: About */}
+      {/* Row 6: About */}
       <div className="nav-row">
         <button className={`nav-btn${page === 'about' ? ' active' : ''}`} onClick={() => setPage('about')}>About</button>
       </div>
 
-      {/* Row 6: Contact ————————————————— Categories */}
+      {/* Row 7: Contact ————————————————— Categories */}
       <div className="nav-row nav-row-last">
         <button className={`nav-btn${page === 'contact' ? ' active' : ''}`} onClick={() => setPage('contact')}>Contact</button>
         <select className="cat-select" value={category}
@@ -321,6 +361,7 @@ export default function App() {
         <AnimatePresence mode="wait">
           {page === 'archive' && <ArchivePage key="archive" open={setLbSrc} search={search} category={category} characters={characters} />}
           {page === 'preview' && <PreviewPage key="preview" open={setLbSrc} search={search} category={category} characters={characters} />}
+          {page === 'interaction' && <InteractionPage key="interaction" />}
           {page === 'font'    && <FontPage    key="font" />}
           {page === 'about'   && <AboutPage   key="about" count={characters.length} />}
           {page === 'contact' && <ContactPage key="contact" />}

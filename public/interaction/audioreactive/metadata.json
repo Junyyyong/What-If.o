@@ -1,0 +1,7 @@
+{
+  "name": "미스터보쟁글스 인터렉션 최종",
+  "description": "A real-time audio visualizer that turns your voice into a dynamic 3D light show. No API key required, runs entirely locally.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}

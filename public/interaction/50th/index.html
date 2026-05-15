@@ -1,0 +1,2165 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>50주년 도형 모핑 인터랙션</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard@1.3.8/dist/web/static/pretendard.css">
+    <style>
+        html, body {
+            height: 100%;
+        }
+        body {
+            background: #fff;
+            font-family: 'Pretendard', 'Apple SD Gothic Neo', 'sans-serif';
+            margin: 0;
+            min-height: 100vh;
+            height: 100vh;
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            padding: 24px;
+            box-sizing: border-box;
+        }
+        .controls-container {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            width: auto;
+            max-height: calc(100vh - 48px);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 0;
+            z-index: 1000;
+            overflow-y: auto;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            cursor: move;
+            user-select: none;
+        }
+        .element-group {
+            display: flex;
+            flex-direction: row;
+            gap: 6px;
+            align-items: center;
+        }
+        .element-title {
+            display: none;
+        }
+        .button-group {
+            display: flex;
+            flex-direction: row;
+            gap: 8px;
+        }
+        .morph-button {
+            padding: 4px 8px;
+            border: 1px solid #e5e5ea;
+            border-radius: 4px;
+            background: #fff;
+            color: #666;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .morph-button:hover {
+            background: #f5f5f5;
+        }
+        .morph-button.active {
+            background: #e5e5ea;
+            color: #000;
+            border-color: #8e8e93;
+            font-weight: 500;
+        }
+        .canvas-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100vw;
+            height: 100vh;
+            max-width: 100vw;
+            max-height: 100vh;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+            background: #fff;
+            border-radius: 0;
+            box-shadow: none;
+            border: none;
+            margin: 0 auto;
+        }
+        input[type=range] {
+            width: 100%;
+            margin: 0;
+            accent-color: #d1d1d6;
+            height: 2px;
+            background: #e5e5ea;
+            border-radius: 2px;
+            outline: none;
+            transition: background 0.2s;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #fff;
+            border: 1.5px solid #d1d1d6;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+            cursor: pointer;
+            transition: background 0.2s, border 0.2s;
+        }
+        input[type=range]:focus::-webkit-slider-thumb {
+            border: 2px solid #d1d1d6;
+            background: #fff;
+        }
+        input[type=range]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #fff;
+            border: 1.5px solid #d1d1d6;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+            cursor: pointer;
+            transition: background 0.2s, border 0.2s;
+        }
+        input[type=range]:focus::-moz-range-thumb {
+            border: 2px solid #d1d1d6;
+            background: #fff;
+        }
+        input[type=range]:focus {
+            outline: none;
+        }
+        @media (max-width: 1600px) {
+            .canvas-container, canvas {
+                width: 100vw;
+                height: 100vh;
+            }
+        }
+        /* 숨겨진 SVG */
+        #hiddenSVG { position: absolute; left: -9999px; top: -9999px; width: 0; height: 0; visibility: hidden; }
+        .size-slider {
+            width: 50px;
+            margin-left: 4px;
+        }
+        .color-button {
+            width: 20px;
+            height: 20px;
+            border: none;
+            border-radius: 50%;
+            padding: 0;
+            cursor: pointer;
+            margin-left: 4px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: none;
+            min-width: 20px;
+            min-height: 20px;
+        }
+        .color-button::-webkit-color-swatch {
+            border: none;
+            border-radius: 50%;
+            padding: 0;
+            width: 20px;
+            height: 20px;
+        }
+        .color-button::-webkit-color-swatch-wrapper {
+            border: none;
+            border-radius: 50%;
+            padding: 0;
+            width: 20px;
+            height: 20px;
+        }
+        .color-button::-moz-color-swatch {
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+        }
+        .color-button:hover {
+            opacity: 0.8;
+        }
+        /* 기존 스타일 유지 */
+        .export-button {
+            margin-top: 12px;
+            padding: 8px 16px;
+            background: #000000;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .export-button:hover {
+            background: #3a2f2b;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls-container">
+        <div class="element-group">
+            <button class="morph-button" data-element="1" data-morph="a">a</button>
+            <button class="morph-button" data-element="1" data-morph="b">b</button>
+            <button class="morph-button" data-element="1" data-morph="c">c</button>
+            <button class="morph-button" data-element="1" data-morph="d">d</button>
+            <button class="morph-button" data-element="1" data-morph="e">e</button>
+            <input type="range" class="size-slider" data-element="1" min="1" max="5" step="0.1" value="2">
+            <input type="color" class="color-button" data-element="1" value="#000000">
+        </div>
+        <div class="element-group">
+            <button class="morph-button" data-element="2" data-morph="a">a</button>
+            <button class="morph-button" data-element="2" data-morph="b">b</button>
+            <button class="morph-button" data-element="2" data-morph="c">c</button>
+            <button class="morph-button" data-element="2" data-morph="d">d</button>
+            <button class="morph-button" data-element="2" data-morph="e">e</button>
+            <input type="range" class="size-slider" data-element="2" min="1" max="5" step="0.1" value="2">
+            <input type="color" class="color-button" data-element="2" value="#000000">
+        </div>
+        <div class="element-group">
+            <button class="morph-button" data-element="3" data-morph="a">a</button>
+            <button class="morph-button" data-element="3" data-morph="b">b</button>
+            <button class="morph-button" data-element="3" data-morph="c">c</button>
+            <button class="morph-button" data-element="3" data-morph="d">d</button>
+            <button class="morph-button" data-element="3" data-morph="e">e</button>
+            <input type="range" class="size-slider" data-element="3" min="1" max="5" step="0.1" value="2">
+            <input type="color" class="color-button" data-element="3" value="#000000">
+        </div>
+        <div class="element-group">
+            <button class="morph-button" data-element="4" data-morph="a">a</button>
+            <button class="morph-button" data-element="4" data-morph="b">b</button>
+            <button class="morph-button" data-element="4" data-morph="c">c</button>
+            <button class="morph-button" data-element="4" data-morph="d">d</button>
+            <button class="morph-button" data-element="4" data-morph="e">e</button>
+            <input type="range" class="size-slider" data-element="4" min="1" max="5" step="0.1" value="2">
+            <input type="color" class="color-button" data-element="4" value="#000000">
+        </div>
+        <div class="element-group">
+            <button class="morph-button" data-element="5" data-morph="a">a</button>
+            <button class="morph-button" data-element="5" data-morph="b">b</button>
+            <button class="morph-button" data-element="5" data-morph="c">c</button>
+            <button class="morph-button" data-element="5" data-morph="d">d</button>
+            <button class="morph-button" data-element="5" data-morph="e">e</button>
+            <input type="range" class="size-slider" data-element="5" min="1" max="5" step="0.1" value="2">
+            <input type="color" class="color-button" data-element="5" value="#000000">
+        </div>
+        <button id="exportSvgButton" class="export-button">SVG 내보내기</button>
+    </div>
+    <div class="canvas-container">
+        <canvas id="mainCanvas" style="display:block;"></canvas>
+    </div>
+    <!-- 숨겨진 SVG: path 좌표 샘플링용 및 검은 솔리드용 -->
+    <svg id="hiddenSVG" viewBox="0 0 841.89 595.28" xmlns="http://www.w3.org/2000/svg">
+        <line id="horizontalGuide" x1="394.72" y1="166.15" x2="484.8" y2="166.15" />
+        <line id="verticalGuide" x1="484.8" y1="166.15" x2="484.8" y2="137.12" />
+        <path id="arcGuide1" d="M394.72,349.79c8.18,3,17.01,4.64,26.22,4.64,42.07,0,76.17-34.1,76.17-76.17s-34.1-76.17-76.17-76.17c-9.21,0-18.05,1.64-26.22,4.64" />
+        <path id="arcGuide2" d="M394.72,443.86c8.18,3,17.01,4.63,26.22,4.63,42.07,0,76.17-34.1,76.17-76.17s-34.1-76.17-76.17-76.17c-9.21,0-18.05,1.64-26.22,4.63" />
+        <path id="arcGuide3" d="M394.72,300.79c-29.15,10.69-49.95,38.68-49.95,71.54s20.8,60.85,49.95,71.54" />
+        <!-- 50_2.svg의 path를 아래에 추가 (예시, 실제 데이터로 교체 필요) -->
+        <g id="solidShape">
+            <path d="M270,120h220v50H270z" />
+            <path d="M520,120h60v110h-60z" />
+            <path d="M260,280c40-15,80-20,120-20,120,0,220,90,220,210,0,120-100,210-220,210-120,0-220-90-220-210,0-90,60-170,160-190z" />
+            <path d="M300,520c30,10,60,15,90,15,90,0,160-70,160-160,0-90-70-160-160-160-30,0-60,5-90,15z" />
+        </g>
+    </svg>
+    <script>
+    // --- 유틸리티 함수들 ---
+    const Utils = {
+        seededRandom(seed) {
+            let x = Math.sin(seed) * 10000;
+            return function() {
+                x = Math.sin(x) * 10000;
+                return x - Math.floor(x);
+            };
+        },
+
+        seededNoise(x, y, t, seed) {
+            return Math.sin(x * 0.7 + y * 0.5 + t * 0.001 + seed) * 0.5 + 
+                   Math.cos(x * 0.3 - y * 0.2 + t * 0.0013 + seed) * 0.5;
+        },
+
+        createPentagon(x, y, size, angle = 0) {
+            const points = [];
+            for (let i = 0; i < 5; i++) {
+                const a = angle + (i * 2 * Math.PI / 5) - Math.PI / 2;
+                points.push({
+                    x: x + size * Math.cos(a),
+                    y: y + size * Math.sin(a)
+                });
+            }
+            return points;
+        },
+
+        sampleSVGPathPoints(pathId, numPoints) {
+            const path = document.getElementById(pathId);
+            const length = path.getTotalLength();
+            const pts = [];
+            for (let i = 0; i < numPoints; i++) {
+                const l = i * length / (numPoints - 1);
+                const pt = path.getPointAtLength(l);
+                pts.push({ x: pt.x, y: pt.y });
+            }
+            return pts;
+        },
+
+        sampleSVGLinePoints(lineId, numPoints) {
+            const line = document.getElementById(lineId);
+            const x1 = parseFloat(line.getAttribute('x1'));
+            const y1 = parseFloat(line.getAttribute('y1'));
+            const x2 = parseFloat(line.getAttribute('x2'));
+            const y2 = parseFloat(line.getAttribute('y2'));
+            const pts = [];
+            for (let i = 0; i < numPoints; i++) {
+                const t = i / (numPoints - 1);
+                pts.push({ x: x1 + (x2 - x1) * t, y: y1 + (y2 - y1) * t });
+            }
+            return pts;
+        }
+    };
+
+    // --- 도형 그리기 클래스 ---
+class ShapeRenderer {
+        static drawPentagon(ctx, points, fill = true, opacity = 1, strokeColor = '#000000', lineWidth = 2, scaleX = 1, scaleY = 1) {
+            ctx.save();
+            ctx.globalAlpha = opacity;
+            ctx.beginPath();
+            ctx.moveTo(points[0].x * scaleX, points[0].y * scaleY);
+            for (let i = 1; i < 5; i++) ctx.lineTo(points[i].x * scaleX, points[i].y * scaleY);
+            ctx.closePath();
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+
+            if (fill) {
+                ctx.fillStyle = strokeColor;
+                ctx.fill();
+            } else {
+                ctx.strokeStyle = strokeColor;
+                ctx.lineWidth = lineWidth;
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+
+        static drawWirePrism(ctx, pathPts, size, angle = 0, opacity = 1, strokeColor = '#000000', scaleX = 1, scaleY = 1, lineWidth = 1) {
+            ctx.save();
+            ctx.globalAlpha = opacity;
+            const pentArr = pathPts.map(pt => Utils.createPentagon(pt.x, pt.y, size, angle));
+            for (let i = 0; i < 5; i++) {
+                ctx.beginPath();
+                for (let j = 0; j < pentArr.length; j++) {
+                    if (j === 0) ctx.moveTo(pentArr[j][i].x * scaleX, pentArr[j][i].y * scaleY);
+                    else ctx.lineTo(pentArr[j][i].x * scaleX, pentArr[j][i].y * scaleY);
+                }
+                ctx.lineJoin = 'round';
+                ctx.lineCap = 'round';
+                ctx.strokeStyle = strokeColor;
+                ctx.lineWidth = lineWidth;
+                ctx.stroke();
+            }
+            [0, pentArr.length - 1].forEach(idx => {
+                const pts = pentArr[idx];
+                ctx.beginPath();
+                ctx.moveTo(pts[0].x * scaleX, pts[0].y * scaleY);
+                for (let i = 1; i < 5; i++) ctx.lineTo(pts[i].x * scaleX, pts[i].y * scaleY);
+                ctx.closePath();
+                ctx.lineJoin = 'round';
+                ctx.lineCap = 'round';
+                ctx.strokeStyle = strokeColor;
+                ctx.lineWidth = lineWidth;
+                ctx.stroke();
+            });
+            ctx.restore();
+        }
+
+        static drawSolidPrism(ctx, pathPts, size, angle = 0, opacity = 1, fillColor = "#fff", strokeColor = '#000000', scaleX = 1, scaleY = 1, lineWidth = 1) {
+            ctx.save();
+            ctx.globalAlpha = opacity;
+            const pentArr = pathPts.map(pt => Utils.createPentagon(pt.x, pt.y, size, angle));
+            for (let i = 0; i < 5; i++) {
+                ctx.beginPath();
+                for (let j = 0; j < pentArr.length; j++) {
+                    const pt = pentArr[j][i];
+                    if (j === 0) ctx.moveTo(pt.x * scaleX, pt.y * scaleY);
+                    else ctx.lineTo(pt.x * scaleX, pt.y * scaleY);
+                }
+                for (let j = pentArr.length - 1; j >= 0; j--) {
+                    const next = pentArr[j][(i + 1) % 5];
+                    ctx.lineTo(next.x * scaleX, next.y * scaleY);
+                }
+                ctx.closePath();
+                ctx.fillStyle = fillColor;
+                ctx.fill();
+                ctx.lineJoin = 'round';
+                ctx.lineCap = 'round';
+                ctx.strokeStyle = strokeColor;
+                ctx.lineWidth = lineWidth;
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+
+        static drawBrush(ctx, pathPts, size, opacity = 1, fillColor = '#000000', scaleX = 1, scaleY = 1) {
+            ctx.save();
+            ctx.globalAlpha = opacity;
+            ctx.beginPath();
+            const first = pathPts[0];
+            const second = pathPts[1];
+            const startAngle = Math.atan2(second.y - first.y, second.x - first.x);
+            const last = pathPts[pathPts.length - 1];
+            const secondLast = pathPts[pathPts.length - 2];
+            const endAngle = Math.atan2(last.y - secondLast.y, last.x - secondLast.x);
+            const p1 = {
+                x: first.x - Math.sin(startAngle) * size / 2,
+                y: first.y + Math.cos(startAngle) * size / 2
+            };
+            const p2 = {
+                x: last.x - Math.sin(endAngle) * size / 2,
+                y: last.y + Math.cos(endAngle) * size / 2
+            };
+            const p3 = {
+                x: last.x + Math.sin(endAngle) * size / 2,
+                y: last.y - Math.cos(endAngle) * size / 2
+            };
+            const p4 = {
+                x: first.x + Math.sin(startAngle) * size / 2,
+                y: first.y - Math.cos(startAngle) * size / 2
+            };
+            ctx.moveTo(p1.x * scaleX, p1.y * scaleY);
+            for (let i = 1; i < pathPts.length - 1; i++) {
+                const prev = pathPts[i - 1];
+                const current = pathPts[i];
+                const next = pathPts[i + 1];
+                const angle = Math.atan2(next.y - prev.y, next.x - prev.x);
+                ctx.lineTo(
+                    (current.x - Math.sin(angle) * size / 2) * scaleX,
+                    (current.y + Math.cos(angle) * size / 2) * scaleY
+                );
+            }
+            ctx.lineTo(p2.x * scaleX, p2.y * scaleY);
+            ctx.lineTo(p3.x * scaleX, p3.y * scaleY);
+            for (let i = pathPts.length - 2; i > 0; i--) {
+                const next = pathPts[i + 1];
+                const current = pathPts[i];
+                const prev = pathPts[i - 1];
+                const angle = Math.atan2(next.y - prev.y, next.x - prev.x);
+                ctx.lineTo(
+                    (current.x + Math.sin(angle) * size / 2) * scaleX,
+                    (current.y - Math.cos(angle) * size / 2) * scaleY
+                );
+            }
+            ctx.lineTo(p4.x * scaleX, p4.y * scaleY);
+            ctx.closePath();
+            ctx.fillStyle = fillColor;
+            ctx.fill();
+            ctx.restore();
+        }
+    }
+
+    // --- 상태 관리 클래스 ---
+    class StateManager {
+        constructor() {
+            this.elementStates = {
+                1: new Set(['a']),
+                2: new Set(['a']),
+                3: new Set(['a']),
+                4: new Set(['a']),
+                5: new Set(['a'])
+            };
+            this.guides = null;
+            this.elementSizeMultipliers = {
+                1: 2,
+                2: 2,
+                3: 2,
+                4: 2,
+                5: 2
+            };
+            this.elementColors = {
+                1: '#000000',
+                2: '#000000',
+                3: '#000000',
+                4: '#000000',
+                5: '#000000'
+            };
+            this.globalRotation = 0; // 전체 회전 각도 (라디안)
+        }
+
+        getAllGuides() {
+            if (this.guides) return this.guides;
+            this.guides = {
+                1: Utils.sampleSVGLinePoints('horizontalGuide', 12),
+                2: Utils.sampleSVGLinePoints('verticalGuide', 5),
+                3: Utils.sampleSVGPathPoints('arcGuide1', 32),
+                4: Utils.sampleSVGPathPoints('arcGuide2', 32),
+                5: Utils.sampleSVGPathPoints('arcGuide3', 20)
+            };
+            return this.guides;
+        }
+
+        toggleMorph(element, morph) {
+            if (this.elementStates[element].has(morph)) {
+                this.elementStates[element].delete(morph);
+            } else {
+                this.elementStates[element].add(morph);
+            }
+        }
+
+        hasAnimation() {
+            return [1,2,3,4,5].some(i => {
+                const morphs = this.elementStates[i];
+                // b, c, d 조합이거나 e가 포함된 경우 애니메이션 필요
+                return (morphs.has('b') && morphs.has('c') && morphs.has('d')) || morphs.has('e');
+            });
+        }
+    }
+
+    // --- 애니메이션 관리 클래스 ---
+    class AnimationManager {
+        constructor(stateManager) {
+            this.stateManager = stateManager;
+            this.mainCanvas = document.getElementById('mainCanvas');
+            this.staticLayer = document.createElement('canvas');
+            this.staticLayer.width = this.mainCanvas.width;
+            this.staticLayer.height = this.mainCanvas.height;
+            this.staticCtx = this.staticLayer.getContext('2d');
+            this.globalAnimationFrameId = null;
+        }
+
+        renderStaticAll() {
+            this.staticCtx.setTransform(1,0,0,1,0,0);
+            this.staticCtx.clearRect(0,0,this.staticLayer.width,this.staticLayer.height);
+            // 스케일 계산
+            const SVG_WIDTH = 841.89;
+            const SVG_HEIGHT = 595.28;
+            const scale = Math.min(this.staticLayer.width / SVG_WIDTH, this.staticLayer.height / SVG_HEIGHT);
+            this.staticCtx.setTransform(1,0,0,1,0,0);
+            // 캔버스 중앙 기준 회전 적용
+            this.staticCtx.translate(this.staticLayer.width/2, this.staticLayer.height/2);
+            this.staticCtx.rotate(this.stateManager.globalRotation);
+            this.staticCtx.translate(-this.staticLayer.width/2, -this.staticLayer.height/2);
+            for (let i = 1; i <= 5; i++) {
+                if (!this.stateManager.elementStates[i].has('e')) {
+                    const shapes = this.getShapes(i, this.stateManager.elementStates[i], null, 1234);
+                    this.drawShapes(this.staticCtx, shapes, scale, scale);
+                }
+            }
+            const ctx = this.mainCanvas.getContext('2d');
+            ctx.setTransform(1,0,0,1,0,0);
+            ctx.clearRect(0,0,this.mainCanvas.width,this.mainCanvas.height);
+            ctx.drawImage(this.staticLayer, 0, 0);
+        }
+
+        animateAll() {
+            this.renderStaticAll();
+            const ctx = this.mainCanvas.getContext('2d');
+            const scale = Math.min(this.mainCanvas.width / SVG_WIDTH, this.mainCanvas.height / SVG_HEIGHT);
+            ctx.setTransform(1,0,0,1,0,0);
+            // 캔버스 중앙 기준 회전 적용
+            ctx.translate(this.mainCanvas.width/2, this.mainCanvas.height/2);
+            ctx.rotate(this.stateManager.globalRotation);
+            ctx.translate(-this.mainCanvas.width/2, -this.mainCanvas.height/2);
+            for (let i = 1; i <= 5; i++) {
+                if (this.stateManager.elementStates[i].has('e')) {
+                    const shapes = this.getShapes(i, this.stateManager.elementStates[i], Date.now(), 5678);
+                    this.drawShapes(ctx, shapes, scale, scale);
+                }
+            }
+            if (this.stateManager.hasAnimation()) {
+                this.globalAnimationFrameId = requestAnimationFrame(() => this.animateAll());
+            } else {
+                this.globalAnimationFrameId = null;
+            }
+        }
+
+        drawShapes(ctx, shapes, scaleX = 1, scaleY = 1) {
+            for (const shape of shapes) {
+                switch(shape.type) {
+                    case 'pentagon':
+                        ShapeRenderer.drawPentagon(ctx, shape.points, shape.fill, shape.opacity, shape.strokeColor, shape.lineWidth, scaleX, scaleY);
+                        break;
+                    case 'wireprism':
+                        ShapeRenderer.drawWirePrism(ctx, shape.pathPts, shape.size, shape.angle, shape.opacity, shape.strokeColor, scaleX, scaleY);
+                        break;
+                    case 'solidprism':
+                        ShapeRenderer.drawSolidPrism(ctx, shape.pathPts, shape.size, shape.angle, shape.opacity, shape.fillColor, shape.strokeColor, scaleX, scaleY, shape.lineWidth || 1);
+                        break;
+                    case 'brush':
+                        ShapeRenderer.drawBrush(ctx, shape.pathPts, shape.size, shape.opacity, shape.fillColor, scaleX, scaleY);
+                        break;
+                }
+            }
+        }
+
+        syncAll() {
+            if (this.globalAnimationFrameId) {
+                cancelAnimationFrame(this.globalAnimationFrameId);
+                this.globalAnimationFrameId = null;
+            }
+            if (this.stateManager.hasAnimation()) {
+                this.animateAll();
+            } else {
+                this.renderStaticAll();
+            }
+        }
+
+        getShapes(elementId, morphs, time = null, seed = 0) {
+            const pathPts = this.stateManager.getAllGuides()[elementId];
+            const isCurve = (elementId >= 3);
+            const baseSize = 5;
+            const shapes = [];
+            const elementColor = this.stateManager.elementColors[elementId];
+            const rand = Utils.seededRandom(seed + elementId);
+
+            // e가 포함된 조합 처리
+            if (morphs.has('e')) {
+                // e만 있는 경우
+                if (morphs.size === 1) {
+                    if (time === null) return [];
+                    const speed = 0.000045;
+                    const numPentagons = Math.round(pathPts.length * 0.8);
+                    const now = (time * speed % 1);
+                    for (let i = 0; i < numPentagons; i++) {
+                        let offset = now - (i / numPentagons);
+                        if (offset < 0) offset += 1;
+                        if (offset > 1) offset -= 1;
+                        const pos = offset * (pathPts.length - 1);
+                        const pathIndex = Math.floor(pos);
+                        const nextIndex = pathIndex + 1;
+                        const t = pos - pathIndex;
+                        if (!isCurve) {
+                            if (pathIndex < 0 || nextIndex >= pathPts.length) continue;
+                        } else {
+                            if (pathIndex >= pathPts.length - 1) continue;
+                            if (nextIndex >= pathPts.length - 1) continue;
+                        }
+                        const current = pathPts[pathIndex];
+                        const next = pathPts[nextIndex];
+                        const x = current.x + (next.x - current.x) * t;
+                        const y = current.y + (next.y - current.y) * t;
+                        const angle = time * 0.001 + i * 0.1;
+                        shapes.push({
+                            type: 'pentagon',
+                            points: Utils.createPentagon(x, y, baseSize * 1.2 * this.stateManager.elementSizeMultipliers[elementId], angle),
+                            opacity: 1,
+                            fill: true,
+                            strokeColor: elementColor
+                        });
+                    }
+                    return shapes;
+                }
+
+                const baseMorphs = new Set([...morphs].filter(m => m !== 'e'));
+
+                // a + b + c + d + e 조합
+                if (baseMorphs.has('a') && baseMorphs.has('b') && baseMorphs.has('c') && baseMorphs.has('d')) {
+                    const rotationAngle = time * 0.0005;
+                    const twistAmount = 16;
+                    const twistedPathPts = pathPts.map((pt, i) => {
+                        const t = i / (pathPts.length - 1);
+                        const angle = t * Math.PI * twistAmount + rotationAngle;
+                        const radius = baseSize * 0.5;
+                        return {
+                            x: pt.x + Math.cos(angle) * radius,
+                            y: pt.y + Math.sin(angle) * radius
+                        };
+                    });
+
+                    // 와이어프레임 레이어
+                    shapes.push({
+                        type: 'wireprism',
+                        pathPts: twistedPathPts,
+                        size: baseSize * 1.4 * this.stateManager.elementSizeMultipliers[elementId],
+                        angle: rotationAngle,
+                        opacity: 0.8,
+                        strokeColor: elementColor,
+                        lineWidth: 3
+                    });
+
+                    // 솔리드프리즘 레이어
+                    shapes.push({
+                        type: 'solidprism',
+                        pathPts: twistedPathPts,
+                        size: baseSize * 1.2 * this.stateManager.elementSizeMultipliers[elementId],
+                        angle: rotationAngle,
+                        opacity: 0.6,
+                        fillColor: "#fff",
+                        strokeColor: elementColor,
+                        lineWidth: 1
+                    });
+
+                    // 오각형 레이어
+                    for (let i = 0; i < twistedPathPts.length; i += 3) {
+                        const pt = twistedPathPts[i];
+                        const angle = (i / twistedPathPts.length) * Math.PI * 4 + rotationAngle;
+                        shapes.push({
+                            type: 'pentagon',
+                            points: Utils.createPentagon(pt.x, pt.y, baseSize * 0.8 * this.stateManager.elementSizeMultipliers[elementId], angle),
+                            opacity: 0.6,
+                            fill: false,
+                            strokeColor: elementColor,
+                            lineWidth: 1
+                        });
+                    }
+                    return shapes;
+                }
+
+                // a + b + d + e 조합
+                if (baseMorphs.has('a') && baseMorphs.has('b') && baseMorphs.has('d')) {
+                    const rotationAngle = time * 0.0005;
+                    const twistAmount = 16;
+                    const twistedPathPts = pathPts.map((pt, i) => {
+                        const t = i / (pathPts.length - 1);
+                        const angle = rotationAngle + (t * Math.PI * twistAmount);
+                        const radius = baseSize * 0.5;
+                        return {
+                            x: pt.x + Math.cos(angle) * radius,
+                            y: pt.y + Math.sin(angle) * radius
+                        };
+                    });
+
+                    // 브러시 레이어
+                    shapes.push({
+                        type: 'brush',
+                        pathPts: twistedPathPts,
+                        size: baseSize * this.stateManager.elementSizeMultipliers[elementId],
+                        opacity: 1,
+                        fillColor: elementColor
+                    });
+
+                    // 솔리드프리즘 레이어
+                    shapes.push({
+                        type: 'solidprism',
+                        pathPts: twistedPathPts,
+                        size: baseSize * 1.2 * this.stateManager.elementSizeMultipliers[elementId],
+                        angle: rotationAngle,
+                        opacity: 1.0,
+                        fillColor: "#fff",
+                        strokeColor: elementColor,
+                        lineWidth: 10
+                    });
+
+                    // 오각형 레이어
+                    for (let i = 0; i < twistedPathPts.length; i += 3) {
+                        const pt = twistedPathPts[i];
+                        const angle = (i / twistedPathPts.length) * Math.PI * 4 + rotationAngle;
+                        shapes.push({
+                            type: 'pentagon',
+                            points: Utils.createPentagon(pt.x, pt.y, baseSize * 0.8 * this.stateManager.elementSizeMultipliers[elementId], angle),
+                            opacity: 1,
+                            fill: false,
+                            strokeColor: elementColor,
+                            lineWidth: 10
+                        });
+                    }
+                    return shapes;
+                }
+
+                // b + c + d + e 조합
+                if (baseMorphs.has('b') && baseMorphs.has('c') && baseMorphs.has('d')) {
+                    const rotationAngle = time * 0.0005;
+                    const twistAmount = 16;
+                    const twistedPathPts = pathPts.map((pt, i) => {
+                        const t = i / (pathPts.length - 1);
+                        const angle = t * Math.PI * twistAmount + rotationAngle;
+                        const radius = baseSize * 0.5;
+                        return {
+                            x: pt.x + Math.cos(angle) * radius,
+                            y: pt.y + Math.sin(angle) * radius
+                        };
+                    });
+
+                    // 솔리드프리즘 레이어
+                    shapes.push({
+                        type: 'solidprism',
+                        pathPts: twistedPathPts,
+                        size: baseSize * 1.2 * this.stateManager.elementSizeMultipliers[elementId],
+                        angle: rotationAngle,
+                        opacity: 0.4,
+                        fillColor: "#fff",
+                        strokeColor: elementColor,
+                        lineWidth: 1.5
+                    });
+
+                    // 와이어프레임 레이어
+                    shapes.push({
+                        type: 'wireprism',
+                        pathPts: twistedPathPts,
+                        size: baseSize * 1.2 * this.stateManager.elementSizeMultipliers[elementId],
+                        angle: rotationAngle,
+                        opacity: 0.8,
+                        strokeColor: elementColor,
+                        lineWidth: 1
+                    });
+
+                    // 오각형 레이어
+                    for (let i = 0; i < twistedPathPts.length; i += 3) {
+                        const pt = twistedPathPts[i];
+                        const angle = (i / twistedPathPts.length) * Math.PI * 4 + rotationAngle;
+                        shapes.push({
+                            type: 'pentagon',
+                            points: Utils.createPentagon(pt.x, pt.y, baseSize * 0.8 * this.stateManager.elementSizeMultipliers[elementId], angle),
+                            opacity: 1,
+                            fill: false,
+                            strokeColor: elementColor,
+                            lineWidth: 1
+                        });
+                    }
+                    return shapes;
+                }
+
+                // a + c + d + e 조합
+                if (baseMorphs.has('a') && baseMorphs.has('c') && baseMorphs.has('d')) {
+                    const totalPoints = pathPts.length;
+                    const transitionPoints = Math.floor(totalPoints * 0.3);
+                    const startSolid = Math.floor(totalPoints * 0.4);
+                    const rotationAngle = time * 0.0005;
+
+                    // 와이어프레임 부분
+                    const wirePathPts = pathPts.slice(0, startSolid + transitionPoints);
+                    shapes.push({
+                        type: 'wireprism',
+                        pathPts: wirePathPts,
+                        size: baseSize * 1.2 * this.stateManager.elementSizeMultipliers[elementId],
+                        angle: rotationAngle,
+                        opacity: 1,
+                        strokeColor: elementColor
+                    });
+
+                    // 브러시 부분
+                    shapes.push({
+                        type: 'brush',
+                        pathPts: wirePathPts,
+                        size: baseSize * this.stateManager.elementSizeMultipliers[elementId],
+                        opacity: 0.6,
+                        fillColor: elementColor
+                    });
+
+                    // 전환 구간
+                    for (let i = 0; i < transitionPoints; i++) {
+                        const progress = i / transitionPoints;
+                        const currentPoint = pathPts[startSolid + i];
+                        const nextPoint = pathPts[startSolid + i + 1];
+
+                        if (progress < 0.5) {
+                            shapes.push({
+                                type: 'wireprism',
+                                pathPts: [currentPoint, nextPoint],
+                                size: baseSize * 1.2 * this.stateManager.elementSizeMultipliers[elementId],
+                                angle: rotationAngle,
+                                opacity: 1,
+                                strokeColor: elementColor
+                            });
+                            shapes.push({
+                                type: 'brush',
+                                pathPts: [currentPoint, nextPoint],
+                                size: baseSize * this.stateManager.elementSizeMultipliers[elementId],
+                                opacity: 0.6,
+                                fillColor: elementColor
+                            });
+                        } else {
+                            shapes.push({
+                                type: 'solidprism',
+                                pathPts: [currentPoint, nextPoint],
+                                size: baseSize * 1.2 * this.stateManager.elementSizeMultipliers[elementId],
+                                angle: rotationAngle,
+                                opacity: 1,
+                                fillColor: "#fff",
+                                strokeColor: elementColor
+                            });
+                        }
+                    }
+
+                    // 솔리드프리즘 부분
+                    shapes.push({
+                        type: 'solidprism',
+                        pathPts: pathPts.slice(startSolid + transitionPoints),
+                        size: baseSize * 1.2 * this.stateManager.elementSizeMultipliers[elementId],
+                        angle: rotationAngle,
+                        opacity: 1,
+                        fillColor: "#fff",
+                        strokeColor: elementColor
+                    });
+                    return shapes;
+                }
+
+                // a + b + c + e 조합 (abc 조합에 시간 기반 움직임 추가)
+                if (baseMorphs.has('a') && baseMorphs.has('b') && baseMorphs.has('c')) {
+                    const rotationAngle = time * 0.0005;
+                    const twistAmount = 16;
+                    const twistedPathPts = pathPts.map((pt, i) => {
+                        const t = i / (pathPts.length - 1);
+                        const angle = t * Math.PI * twistAmount + rotationAngle;
+                        const radius = baseSize * 0.5;
+                        return {
+                            x: pt.x + Math.cos(angle) * radius,
+                            y: pt.y + Math.sin(angle) * radius
+                        };
+                    });
+                    shapes.push({
+                        type: 'wireprism',
+                        pathPts: twistedPathPts,
+                        size: baseSize * 1.4 * this.stateManager.elementSizeMultipliers[elementId],
+                        angle: rotationAngle,
+                        opacity: 0.8,
+                        strokeColor: elementColor,
+                        lineWidth: 1.5
+                    });
+                    for (let i = 0; i < twistedPathPts.length; i += 3) {
+                        const pt = twistedPathPts[i];
+                        const angle = (i / twistedPathPts.length) * Math.PI * 4 + rotationAngle;
+                        shapes.push({
+                            type: 'pentagon',
+                            points: Utils.createPentagon(pt.x, pt.y, baseSize * 0.8 * this.stateManager.elementSizeMultipliers[elementId], angle),
+                            opacity: 0.6,
+                            fill: false,
+                            strokeColor: elementColor,
+                            lineWidth: 1
+                        });
+                    }
+                    return shapes;
+                }
+
+                // a + c + e 조합
+                if (baseMorphs.has('a') && baseMorphs.has('c')) {
+                    const rotationAngle = time * 0.0005;
+                    shapes.push({
+                        type: 'brush',
+                        pathPts: pathPts,
+                        size: baseSize * this.stateManager.elementSizeMultipliers[elementId],
+                        opacity: 1,
+                        fillColor: elementColor
+                    });
+                    shapes.push({
+                        type: 'wireprism',
+                        pathPts: pathPts,
+                        size: baseSize * 1.2 * this.stateManager.elementSizeMultipliers[elementId],
+                        angle: rotationAngle,
+                        opacity: 1.0,
+                        strokeColor: elementColor
+                    });
+                    return shapes;
+                }
+
+                // a + d + e 조합
+                if (baseMorphs.has('a') && baseMorphs.has('d')) {
+                    const rotationAngle = time * 0.0005;
+                    shapes.push({
+                        type: 'brush',
+                        pathPts: pathPts,
+                        size: baseSize * this.stateManager.elementSizeMultipliers[elementId],
+                        opacity: 1,
+                        fillColor: elementColor
+                    });
+                    shapes.push({
+                        type: 'solidprism',
+                        pathPts: pathPts,
+                        size: baseSize * 1.2 * this.stateManager.elementSizeMultipliers[elementId],
+                        angle: rotationAngle,
+                        opacity: 1.0,
+                        fillColor: "#fff",
+                        strokeColor: elementColor,
+                        lineWidth: 10
+                    });
+                    return shapes;
+                }
+
+                // c + d + e 조합
+                if (baseMorphs.has('c') && baseMorphs.has('d') && baseMorphs.size === 2) {
+                    const totalPoints = pathPts.length;
+                    const transitionPoints = Math.floor(totalPoints * 0.3);
+                    const startSolid = Math.floor(totalPoints * 0.4);
+                    const rotationAngle = time * 0.0005;
+
+                    // 와이어프레임 부분
+                    const wirePathPts = pathPts.slice(0, startSolid + transitionPoints);
+                    shapes.push({
+                        type: 'wireprism',
+                        pathPts: wirePathPts,
+                        size: baseSize * 1.2 * this.stateManager.elementSizeMultipliers[elementId],
+                        angle: rotationAngle,
+                        opacity: 1,
+                        strokeColor: elementColor
+                    });
+
+                    // 전환 구간
+                    for (let i = 0; i < transitionPoints; i++) {
+                        const progress = i / transitionPoints;
+                        const currentPoint = pathPts[startSolid + i];
+                        const nextPoint = pathPts[startSolid + i + 1];
+
+                        if (progress < 0.5) {
+                            shapes.push({
+                                type: 'wireprism',
+                                pathPts: [currentPoint, nextPoint],
+                                size: baseSize * 1.2 * this.stateManager.elementSizeMultipliers[elementId],
+                                angle: rotationAngle,
+                                opacity: 1,
+                                strokeColor: elementColor
+                            });
+                        } else {
+                            shapes.push({
+                                type: 'solidprism',
+                                pathPts: [currentPoint, nextPoint],
+                                size: baseSize * 1.2 * this.stateManager.elementSizeMultipliers[elementId],
+                                angle: rotationAngle,
+                                opacity: 1,
+                                fillColor: "#fff",
+                                strokeColor: elementColor
+                            });
+                        }
+                    }
+
+                    // 솔리드프리즘 부분
+                    shapes.push({
+                        type: 'solidprism',
+                        pathPts: pathPts.slice(startSolid + transitionPoints),
+                        size: baseSize * 1.2 * this.stateManager.elementSizeMultipliers[elementId],
+                        angle: rotationAngle,
+                        opacity: 1,
+                        fillColor: "#fff",
+                        strokeColor: elementColor
+                    });
+                    return shapes;
+                }
+
+                // a + b + e 조합
+                if (baseMorphs.has('a') && baseMorphs.has('b')) {
+                    const speed = 0.000045;
+                    const numPentagons = Math.round(pathPts.length * 0.8);
+                    const now = (time * speed % 1);
+
+                    const noisy = pathPts.map(pt => ({
+                        x: pt.x + Utils.seededNoise(pt.x * 0.01, pt.y * 0.01, time, seed + elementId) * 2,
+                        y: pt.y + Utils.seededNoise(pt.x * 0.01 + 100, pt.y * 0.01 + 100, time, seed + elementId) * 2
+                    }));
+                    shapes.push({
+                        type: 'brush',
+                        pathPts: noisy,
+                        size: baseSize * this.stateManager.elementSizeMultipliers[elementId],
+                        opacity: 1,
+                        fillColor: elementColor
+                    });
+
+                    for (let i = 0; i < numPentagons; i++) {
+                        let offset = now - (i / numPentagons);
+                        if (offset < 0) offset += 1;
+                        if (offset > 1) offset -= 1;
+                        const pos = offset * (noisy.length - 1);
+                        const pathIndex = Math.floor(pos);
+                        const nextIndex = pathIndex + 1;
+                        const t = pos - pathIndex;
+
+                        if (pathIndex >= 0 && nextIndex < noisy.length) {
+                            const current = noisy[pathIndex];
+                            const next = noisy[nextIndex];
+                            const x = current.x + (next.x - current.x) * t;
+                            const y = current.y + (next.y - current.y) * t;
+                            const angle = time * 0.001 + i * 0.1;
+                            const sizeRand = baseSize * (1 + Math.sin(time * 0.001 + i) * 0.3) * this.stateManager.elementSizeMultipliers[elementId];
+                            shapes.push({
+                                type: 'pentagon',
+                                points: Utils.createPentagon(x, y, sizeRand, angle),
+                                opacity: 1,
+                                fill: true,
+                                strokeColor: elementColor,
+                                lineWidth: 1
+                            });
+                        }
+                    }
+                    return shapes;
+                }
+
+                // b + c + e 조합
+                if (baseMorphs.has('b') && baseMorphs.has('c')) {
+                    const tVal = time * 0.001;
+                    const twistAmount = 8;
+                    const twistedPathPts = pathPts.map((pt, i) => {
+                        const t = i / (pathPts.length - 1);
+                        const angle = tVal + (t * Math.PI * twistAmount);
+                        const radius = baseSize * 0.3;
+                        return {
+                            x: pt.x + Math.cos(angle) * radius,
+                            y: pt.y + Math.sin(angle) * radius
+                        };
+                    });
+                    shapes.push({
+                        type: 'wireprism',
+                        pathPts: twistedPathPts,
+                        size: baseSize * 1.2 * this.stateManager.elementSizeMultipliers[elementId],
+                        angle: tVal * 0.3,
+                        opacity: 1.0,
+                        strokeColor: elementColor
+                    });
+                    return shapes;
+                }
+
+                // b + d + e 조합
+                if (baseMorphs.has('b') && baseMorphs.has('d')) {
+                    const tVal = time * 0.001;
+                    const twistAmount = 8;
+                    const twistedPathPts = pathPts.map((pt, i) => {
+                        const t = i / (pathPts.length - 1);
+                        const angle = tVal + (t * Math.PI * twistAmount);
+                        const radius = baseSize * 0.3;
+                        return {
+                            x: pt.x + Math.cos(angle) * radius,
+                            y: pt.y + Math.sin(angle) * radius
+                        };
+                    });
+                    shapes.push({
+                        type: 'solidprism',
+                        pathPts: twistedPathPts,
+                        size: baseSize * 1.2 * this.stateManager.elementSizeMultipliers[elementId],
+                        angle: tVal * 0.3,
+                        opacity: 1.0,
+                        fillColor: elementColor,
+                        strokeColor: '#fff'
+                    });
+                    return shapes;
+                }
+
+                // a + e 조합
+                if (baseMorphs.has('a')) {
+                    const speed = 0.000045;
+                    const noisy = pathPts.map(pt => ({
+                        x: pt.x + Utils.seededNoise(pt.x * 0.01, pt.y * 0.01, time, seed + elementId) * 2,
+                        y: pt.y + Utils.seededNoise(pt.x * 0.01 + 100, pt.y * 0.01 + 100, time, seed + elementId) * 2
+                    }));
+                    shapes.push({
+                        type: 'brush',
+                        pathPts: noisy,
+                        size: baseSize * this.stateManager.elementSizeMultipliers[elementId],
+                        opacity: 1,
+                        fillColor: elementColor
+                    });
+                    return shapes;
+                }
+
+                // b + e 조합
+                if (baseMorphs.has('b')) {
+                    const speed = 0.00015;
+                    const numPentagons = Math.round(pathPts.length * 0.8);
+                    const frameTime = Math.floor(time * 0.08);
+                    const now = (frameTime * speed % 1);
+
+                    const gridSize = 10;
+
+                    for (let i = 0; i < numPentagons; i++) {
+                        let offset = now - (i / numPentagons);
+                        if (offset < 0) offset += 1;
+                        if (offset > 1) offset -= 1;
+                        const pos = offset * (pathPts.length - 1);
+                        const pathIndex = Math.floor(pos);
+                        const nextIndex = pathIndex + 1;
+                        const t = pos - pathIndex;
+
+                        if (pathIndex >= 0 && nextIndex < pathPts.length) {
+                            const current = pathPts[pathIndex];
+                            const next = pathPts[nextIndex];
+                            const rawX = current.x + (next.x - current.x) * t;
+                            const rawY = current.y + (next.y - current.y) * t;
+                            const x = Math.round(rawX / gridSize) * gridSize;
+                            const y = Math.round(rawY / gridSize) * gridSize;
+
+                            const angle = frameTime * 0.001 + i * 0.1;
+                            const sizeRand = baseSize * (1 + Math.sin(frameTime * 0.001 + i) * 0.3) * this.stateManager.elementSizeMultipliers[elementId];
+                            shapes.push({
+                                type: 'pentagon',
+                                points: Utils.createPentagon(x, y, sizeRand, angle),
+                                opacity: 1,
+                                fill: true,
+                                strokeColor: elementColor,
+                                lineWidth: 1
+                            });
+                        }
+                    }
+                    return shapes;
+                }
+
+                // c + e 조합
+                if (baseMorphs.has('c')) {
+                    const rotationAngle = time * 0.001;
+                    shapes.push({
+                        type: 'wireprism',
+                        pathPts: pathPts,
+                        size: baseSize * 1.2 * this.stateManager.elementSizeMultipliers[elementId],
+                        angle: rotationAngle,
+                        opacity: 1.0,
+                        strokeColor: elementColor
+                    });
+                    return shapes;
+                }
+
+                // d + e 조합
+                if (baseMorphs.has('d')) {
+                    const rotationAngle = time * 0.001;
+                    shapes.push({
+                        type: 'solidprism',
+                        pathPts: pathPts,
+                        size: baseSize * 1.2 * this.stateManager.elementSizeMultipliers[elementId],
+                        angle: rotationAngle,
+                        opacity: 1.0,
+                        fillColor: "#fff",
+                        strokeColor: elementColor
+                    });
+                    return shapes;
+                }
+            }
+
+            // e가 포함되지 않은 조합들 처리
+            // a + b + c + d 조합
+            if (morphs.has('a') && morphs.has('b') && morphs.has('c') && morphs.has('d')) {
+                const rotationAngle = time ? time * 0.0005 : 0;
+                const twistAmount = 16;
+                const twistedPathPts = pathPts.map((pt, i) => {
+                    const t = i / (pathPts.length - 1);
+                    const angle = t * Math.PI * twistAmount + rotationAngle;
+                    const radius = baseSize * 0.5;
+                    return {
+                        x: pt.x + Math.cos(angle) * radius,
+                        y: pt.y + Math.sin(angle) * radius
+                    };
+                });
+
+                // 와이어프레임 레이어
+                shapes.push({
+                    type: 'wireprism',
+                    pathPts: twistedPathPts,
+                    size: baseSize * 1.4 * this.stateManager.elementSizeMultipliers[elementId],
+                    angle: rotationAngle,
+                    opacity: 0.8,
+                    strokeColor: elementColor,
+                    lineWidth: 3
+                });
+
+                // 솔리드프리즘 레이어
+                shapes.push({
+                    type: 'solidprism',
+                    pathPts: twistedPathPts,
+                    size: baseSize * 1.2 * this.stateManager.elementSizeMultipliers[elementId],
+                    angle: rotationAngle,
+                    opacity: 0.6,
+                    fillColor: "#fff",
+                    strokeColor: elementColor,
+                    lineWidth: 1
+                });
+
+                // 오각형 레이어
+                for (let i = 0; i < twistedPathPts.length; i += 3) {
+                    const pt = twistedPathPts[i];
+                    const angle = (i / twistedPathPts.length) * Math.PI * 4 + rotationAngle;
+                    shapes.push({
+                        type: 'pentagon',
+                        points: Utils.createPentagon(pt.x, pt.y, baseSize * 0.8 * this.stateManager.elementSizeMultipliers[elementId], angle),
+                        opacity: 0.6,
+                        fill: false,
+                        strokeColor: elementColor,
+                        lineWidth: 1
+                    });
+                }
+                return shapes;
+            }
+
+            // a + b + c 조합
+            if (morphs.has('a') && morphs.has('b') && morphs.has('c') && morphs.size === 3) {
+                const rotationAngle = time ? time * 0.0005 : 0;
+                const twistAmount = 16;
+                const twistedPathPts = pathPts.map((pt, i) => {
+                    const t = i / (pathPts.length - 1);
+                    const angle = t * Math.PI * twistAmount + rotationAngle;
+                    const radius = baseSize * 0.5;
+                    return {
+                        x: pt.x + Math.cos(angle) * radius,
+                        y: pt.y + Math.sin(angle) * radius
+                    };
+                });
+
+                // 와이어프레임 레이어
+                shapes.push({
+                    type: 'wireprism',
+                    pathPts: twistedPathPts,
+                    size: baseSize * 1.4 * this.stateManager.elementSizeMultipliers[elementId],
+                    angle: rotationAngle,
+                    opacity: 0.8,
+                    strokeColor: elementColor,
+                    lineWidth: 1.5
+                });
+
+                // 오각형 레이어
+                for (let i = 0; i < twistedPathPts.length; i += 3) {
+                    const pt = twistedPathPts[i];
+                    const angle = (i / twistedPathPts.length) * Math.PI * 4 + rotationAngle;
+                    shapes.push({
+                        type: 'pentagon',
+                        points: Utils.createPentagon(pt.x, pt.y, baseSize * 0.8 * this.stateManager.elementSizeMultipliers[elementId], angle),
+                        opacity: 0.6,
+                        fill: false,
+                        strokeColor: elementColor,
+                        lineWidth: 1
+                    });
+                }
+                return shapes;
+            }
+
+            // b + c 조합
+            if (morphs.has('b') && morphs.has('c') && morphs.size === 2) {
+                // 오각형 레이어 (외곽선만)
+                for (let i = 0; i < pathPts.length; i++) {
+                    shapes.push({
+                        type: 'pentagon',
+                        points: Utils.createPentagon(pathPts[i].x, pathPts[i].y, baseSize * 1.2 * this.stateManager.elementSizeMultipliers[elementId], 0),
+                        opacity: 1,
+                        fill: false,
+                        strokeColor: elementColor,
+                        lineWidth: 1
+                    });
+                }
+                return shapes;
+            }
+
+            // b + d 조합
+            if (morphs.has('b') && morphs.has('d') && morphs.size === 2) {
+                for (let i = 0; i < pathPts.length; i++) {
+                    // 접선 각도 계산
+                    let angle = 0;
+                    if (i < pathPts.length - 1) {
+                        const dx = pathPts[i + 1].x - pathPts[i].x;
+                        const dy = pathPts[i + 1].y - pathPts[i].y;
+                        angle = Math.atan2(dy, dx);
+                    } else if (i > 0) {
+                        const dx = pathPts[i].x - pathPts[i - 1].x;
+                        const dy = pathPts[i].y - pathPts[i - 1].y;
+                        angle = Math.atan2(dy, dx);
+                    }
+                    // 검은 오각형
+                    shapes.push({
+                        type: 'pentagon',
+                        points: Utils.createPentagon(
+                            pathPts[i].x,
+                            pathPts[i].y,
+                            baseSize * 1.2 * this.stateManager.elementSizeMultipliers[elementId],
+                            angle
+                        ),
+                        opacity: 1,
+                        fill: true,
+                        strokeColor: elementColor
+                    });
+                    // 흰색 외곽선
+                    shapes.push({
+                        type: 'pentagon',
+                        points: Utils.createPentagon(
+                            pathPts[i].x,
+                            pathPts[i].y,
+                            baseSize * 1.2 * this.stateManager.elementSizeMultipliers[elementId],
+                            angle
+                        ),
+                        opacity: 1,
+                        fill: false,
+                        strokeColor: "#fff",
+                        lineWidth: 1
+                    });
+                }
+                return shapes;
+            }
+
+            // a + c 조합
+            if (morphs.has('a') && morphs.has('c') && morphs.size === 2) {
+                const rotationAngle = time ? time * 0.0005 : 0;
+                shapes.push({
+                    type: 'brush',
+                    pathPts: pathPts,
+                    size: baseSize * this.stateManager.elementSizeMultipliers[elementId],
+                    opacity: 1,
+                    fillColor: elementColor
+                });
+                shapes.push({
+                    type: 'wireprism',
+                    pathPts: pathPts,
+                    size: baseSize * 1.2 * this.stateManager.elementSizeMultipliers[elementId],
+                    angle: rotationAngle,
+                    opacity: 1.0,
+                    strokeColor: elementColor
+                });
+                return shapes;
+            }
+
+            // a + b 조합
+            if (morphs.has('a') && morphs.has('b') && morphs.size === 2) {
+                const totalPoints = pathPts.length;
+                const transitionPoints = Math.floor(totalPoints * 0.3);
+                const startSolid = Math.floor(totalPoints * 0.4);
+                const rotationAngle = time ? time * 0.0005 : 0;
+
+                // b 부분 (시작 부분)
+                for (let i = 0; i < startSolid; i++) {
+                    shapes.push({
+                        type: 'pentagon',
+                        points: Utils.createPentagon(pathPts[i].x, pathPts[i].y, baseSize * 1.2 * this.stateManager.elementSizeMultipliers[elementId], rotationAngle),
+                        opacity: 1,
+                        fill: true,
+                        strokeColor: elementColor,
+                        lineWidth: 1
+                    });
+                }
+
+                // 전환 구간
+                for (let i = 0; i < transitionPoints; i++) {
+                    const progress = i / transitionPoints;
+                    const currentPoint = pathPts[startSolid + i];
+                    const nextPoint = pathPts[startSolid + i + 1];
+
+                    if (progress < 0.5) {
+                        shapes.push({
+                            type: 'pentagon',
+                            points: Utils.createPentagon(currentPoint.x, currentPoint.y, baseSize * 1.2 * this.stateManager.elementSizeMultipliers[elementId], rotationAngle),
+                            opacity: 1,
+                            fill: true,
+                            strokeColor: elementColor,
+                            lineWidth: 1
+                        });
+                    } else {
+                        shapes.push({
+                            type: 'brush',
+                            pathPts: [currentPoint, nextPoint],
+                            size: baseSize * this.stateManager.elementSizeMultipliers[elementId],
+                            opacity: 1,
+                            fillColor: elementColor
+                        });
+                    }
+                }
+
+                // a 부분 (끝 부분)
+                shapes.push({
+                    type: 'brush',
+                    pathPts: pathPts.slice(startSolid + transitionPoints),
+                    size: baseSize * this.stateManager.elementSizeMultipliers[elementId],
+                    opacity: 1,
+                    fillColor: elementColor
+                });
+                return shapes;
+            }
+
+            // a + b + d 조합
+            if (morphs.has('a') && morphs.has('b') && morphs.has('d') && morphs.size === 3) {
+                const rotationAngle = 0;
+                const twistAmount = 16;
+                const twistedPathPts = pathPts.map((pt, i) => {
+                    const t = i / (pathPts.length - 1);
+                    const angle = t * Math.PI * twistAmount + rotationAngle;
+                    const radius = baseSize * 0.5;
+                    return {
+                        x: pt.x + Math.cos(angle) * radius,
+                        y: pt.y + Math.sin(angle) * radius
+                    };
+                });
+
+                // 솔리드프리즘 레이어
+                shapes.push({
+                    type: 'solidprism',
+                    pathPts: twistedPathPts,
+                    size: baseSize * 1.2 * this.stateManager.elementSizeMultipliers[elementId],
+                    angle: rotationAngle,
+                    opacity: 1.0,
+                    fillColor: "#fff",
+                    strokeColor: elementColor,
+                    lineWidth: 10
+                });
+
+                // 오각형 레이어
+                for (let i = 0; i < twistedPathPts.length; i += 3) {
+                    const pt = twistedPathPts[i];
+                    const angle = (i / twistedPathPts.length) * Math.PI * 4 + rotationAngle;
+                    shapes.push({
+                        type: 'pentagon',
+                        points: Utils.createPentagon(pt.x, pt.y, baseSize * 0.8 * this.stateManager.elementSizeMultipliers[elementId], angle),
+                        opacity: 1,
+                        fill: false,
+                        strokeColor: elementColor,
+                        lineWidth: 10
+                    });
+                }
+                return shapes;
+            }
+
+            // a + d 조합
+            if (morphs.has('a') && morphs.has('d') && morphs.size === 2) {
+                const rotationAngle = time ? time * 0.0005 : 0;
+                shapes.push({
+                    type: 'brush',
+                    pathPts: pathPts,
+                    size: baseSize * this.stateManager.elementSizeMultipliers[elementId],
+                    opacity: 1,
+                    fillColor: elementColor
+                });
+                shapes.push({
+                    type: 'solidprism',
+                    pathPts: pathPts,
+                    size: baseSize * 1.2 * this.stateManager.elementSizeMultipliers[elementId],
+                    angle: rotationAngle,
+                    opacity: 1.0,
+                    fillColor: "#fff",
+                    strokeColor: elementColor,
+                    lineWidth: 10
+                });
+                return shapes;
+            }
+
+            // a + c + d 조합
+            if (morphs.has('a') && morphs.has('c') && morphs.has('d') && morphs.size === 3) {
+                const totalPoints = pathPts.length;
+                const transitionPoints = Math.floor(totalPoints * 0.3);
+                const startSolid = Math.floor(totalPoints * 0.4);
+                const rotationAngle = time ? time * 0.0005 : 0;
+
+                // 와이어프레임 부분
+                const wirePathPts = pathPts.slice(0, startSolid + transitionPoints);
+                shapes.push({
+                    type: 'wireprism',
+                    pathPts: wirePathPts,
+                    size: baseSize * 1.2 * this.stateManager.elementSizeMultipliers[elementId],
+                    angle: rotationAngle,
+                    opacity: 1,
+                    strokeColor: elementColor
+                });
+
+                // 브러시 부분
+                shapes.push({
+                    type: 'brush',
+                    pathPts: wirePathPts,
+                    size: baseSize * this.stateManager.elementSizeMultipliers[elementId],
+                    opacity: 0.6,
+                    fillColor: elementColor
+                });
+
+                // 전환 구간
+                for (let i = 0; i < transitionPoints; i++) {
+                    const progress = i / transitionPoints;
+                    const currentPoint = pathPts[startSolid + i];
+                    const nextPoint = pathPts[startSolid + i + 1];
+
+                    if (progress < 0.5) {
+                        shapes.push({
+                            type: 'wireprism',
+                            pathPts: [currentPoint, nextPoint],
+                            size: baseSize * 1.2 * this.stateManager.elementSizeMultipliers[elementId],
+                            angle: rotationAngle,
+                            opacity: 1,
+                            strokeColor: elementColor
+                        });
+                        shapes.push({
+                            type: 'brush',
+                            pathPts: [currentPoint, nextPoint],
+                            size: baseSize * this.stateManager.elementSizeMultipliers[elementId],
+                            opacity: 0.6,
+                            fillColor: elementColor
+                        });
+                    } else {
+                        shapes.push({
+                            type: 'solidprism',
+                            pathPts: [currentPoint, nextPoint],
+                            size: baseSize * 1.2 * this.stateManager.elementSizeMultipliers[elementId],
+                            angle: rotationAngle,
+                            opacity: 1,
+                            fillColor: "#fff",
+                            strokeColor: elementColor
+                        });
+                    }
+                }
+
+                // 솔리드프리즘 부분
+                shapes.push({
+                    type: 'solidprism',
+                    pathPts: pathPts.slice(startSolid + transitionPoints),
+                    size: baseSize * 1.2 * this.stateManager.elementSizeMultipliers[elementId],
+                    angle: rotationAngle,
+                    opacity: 1,
+                    fillColor: "#fff",
+                    strokeColor: elementColor
+                });
+                return shapes;
+            }
+
+            // b + c + d 조합
+            if (morphs.has('b') && morphs.has('c') && morphs.has('d') && morphs.size === 3) {
+                const rotationAngle = time ? time * 0.0005 : 0;
+                const twistAmount = 16;
+                const twistedPathPts = pathPts.map((pt, i) => {
+                    const t = i / (pathPts.length - 1);
+                    const angle = t * Math.PI * twistAmount + rotationAngle;
+                    const radius = baseSize * 0.5;
+                    return {
+                        x: pt.x + Math.cos(angle) * radius,
+                        y: pt.y + Math.sin(angle) * radius
+                    };
+                });
+
+                // 솔리드프리즘 레이어
+                shapes.push({
+                    type: 'solidprism',
+                    pathPts: twistedPathPts,
+                    size: baseSize * 1.2 * this.stateManager.elementSizeMultipliers[elementId],
+                    angle: rotationAngle,
+                    opacity: 0.4,
+                    fillColor: "#fff",
+                    strokeColor: elementColor,
+                    lineWidth: 1.5
+                });
+
+                // 와이어프레임 레이어
+                shapes.push({
+                    type: 'wireprism',
+                    pathPts: twistedPathPts,
+                    size: baseSize * 1.2 * this.stateManager.elementSizeMultipliers[elementId],
+                    angle: rotationAngle,
+                    opacity: 0.8,
+                    strokeColor: elementColor,
+                    lineWidth: 1
+                });
+
+                // 오각형 레이어
+                for (let i = 0; i < twistedPathPts.length; i += 3) {
+                    const pt = twistedPathPts[i];
+                    const angle = (i / twistedPathPts.length) * Math.PI * 4 + rotationAngle;
+                    shapes.push({
+                        type: 'pentagon',
+                        points: Utils.createPentagon(pt.x, pt.y, baseSize * 0.8 * this.stateManager.elementSizeMultipliers[elementId], angle),
+                        opacity: 1,
+                        fill: false,
+                        strokeColor: elementColor,
+                        lineWidth: 1
+                    });
+                }
+                return shapes;
+            }
+
+            // c + d 조합
+            if (morphs.has('c') && morphs.has('d') && morphs.size === 2) {
+                const totalPoints = pathPts.length;
+                const transitionPoints = Math.floor(totalPoints * 0.3);
+                const startSolid = Math.floor(totalPoints * 0.4);
+                const rotationAngle = 0;
+
+                // 와이어프레임 부분
+                const wirePathPts = pathPts.slice(0, startSolid + transitionPoints);
+                shapes.push({
+                    type: 'wireprism',
+                    pathPts: wirePathPts,
+                    size: baseSize * 1.2 * this.stateManager.elementSizeMultipliers[elementId],
+                    angle: rotationAngle,
+                    opacity: 1,
+                    strokeColor: elementColor
+                });
+
+                // 전환 구간
+                for (let i = 0; i < transitionPoints; i++) {
+                    const progress = i / transitionPoints;
+                    const currentPoint = pathPts[startSolid + i];
+                    const nextPoint = pathPts[startSolid + i + 1];
+
+                    if (progress < 0.5) {
+                        shapes.push({
+                            type: 'wireprism',
+                            pathPts: [currentPoint, nextPoint],
+                            size: baseSize * 1.2 * this.stateManager.elementSizeMultipliers[elementId],
+                            angle: rotationAngle,
+                            opacity: 1,
+                            strokeColor: elementColor
+                        });
+                    } else {
+                        shapes.push({
+                            type: 'solidprism',
+                            pathPts: [currentPoint, nextPoint],
+                            size: baseSize * 1.2 * this.stateManager.elementSizeMultipliers[elementId],
+                            angle: rotationAngle,
+                            opacity: 1,
+                            fillColor: "#fff",
+                            strokeColor: elementColor
+                        });
+                    }
+                }
+
+                // 솔리드프리즘 부분
+                shapes.push({
+                    type: 'solidprism',
+                    pathPts: pathPts.slice(startSolid + transitionPoints),
+                    size: baseSize * 1.2 * this.stateManager.elementSizeMultipliers[elementId],
+                    angle: rotationAngle,
+                    opacity: 1,
+                    fillColor: "#fff",
+                    strokeColor: elementColor
+                });
+                return shapes;
+            }
+
+
+
+            // 단일 morph 처리
+            if (morphs.has('a')) {
+                shapes.push({
+                    type: 'brush',
+                    pathPts: pathPts,
+                    size: baseSize * this.stateManager.elementSizeMultipliers[elementId],
+                    opacity: 1,
+                    fillColor: elementColor
+                });
+                return shapes;
+            }
+
+            if (morphs.has('b')) {
+                for (let i = 0; i < pathPts.length; i++) {
+                    shapes.push({
+                        type: 'pentagon',
+                        points: Utils.createPentagon(pathPts[i].x, pathPts[i].y, baseSize * 1.2 * this.stateManager.elementSizeMultipliers[elementId], 0),
+                        opacity: 1,
+                        fill: true,
+                        strokeColor: elementColor
+                    });
+                }
+                return shapes;
+            }
+
+            if (morphs.has('c')) {
+                shapes.push({
+                    type: 'wireprism',
+                    pathPts: pathPts,
+                    size: baseSize * 1.2 * this.stateManager.elementSizeMultipliers[elementId],
+                    angle: 0,
+                    opacity: 1,
+                    strokeColor: elementColor
+                });
+                return shapes;
+            }
+
+            if (morphs.has('d')) {
+                shapes.push({
+                    type: 'solidprism',
+                    pathPts: pathPts,
+                    size: baseSize * 1.2 * this.stateManager.elementSizeMultipliers[elementId],
+                    angle: 0,
+                    opacity: 1,
+                    fillColor: "#fff",
+                    strokeColor: elementColor
+                });
+                return shapes;
+            }
+
+            return shapes;
+        }
+    }
+
+    // --- 초기화 및 이벤트 설정 ---
+    document.addEventListener('DOMContentLoaded', () => {
+        resizeCanvas();
+        const stateManager = new StateManager();
+        const animationManager = new AnimationManager(stateManager);
+        window.animationManager = animationManager; // 전역 등록
+        window.stateManager = stateManager; // 전역 등록
+
+        document.querySelectorAll('.morph-button').forEach(button => {
+            button.addEventListener('click', () => {
+                const element = Number(button.dataset.element);
+                const morph = button.dataset.morph;
+                button.classList.toggle('active');
+                stateManager.toggleMorph(element, morph);
+                animationManager.syncAll();
+            });
+        });
+
+        document.querySelectorAll('.size-slider').forEach(slider => {
+            slider.addEventListener('input', () => {
+                const element = Number(slider.dataset.element);
+                stateManager.elementSizeMultipliers[element] = parseFloat(slider.value);
+                animationManager.syncAll();
+            });
+        });
+
+        document.querySelectorAll('.color-button').forEach(button => {
+            button.addEventListener('input', () => {
+                const element = Number(button.dataset.element);
+                stateManager.elementColors[element] = button.value;
+                animationManager.syncAll();
+            });
+        });
+
+        document.querySelectorAll('.morph-button[data-morph="a"]').forEach(button => {
+            button.classList.add('active');
+        });
+
+        // SVG 내보내기 버튼 이벤트 리스너 추가
+        document.getElementById('exportSvgButton').addEventListener('click', () => {
+            exportToSVG(stateManager, animationManager);
+        });
+
+        animationManager.syncAll();
+
+        // resize 이벤트는 반드시 animationManager 생성 이후에 등록
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+            animationManager.syncAll();
+        });
+
+        // --- 컨트롤러 드래그 기능 ---
+        let isDraggingControls = false;
+        let dragStartX = 0;
+        let dragStartY = 0;
+        let controlsStartX = 0;
+        let controlsStartY = 0;
+        const controlsContainer = document.querySelector('.controls-container');
+
+        controlsContainer.addEventListener('mousedown', (e) => {
+            // 버튼이나 슬라이더 클릭 시에는 드래그하지 않음
+            if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') {
+                return;
+            }
+            isDraggingControls = true;
+            dragStartX = e.clientX;
+            dragStartY = e.clientY;
+            const rect = controlsContainer.getBoundingClientRect();
+            controlsStartX = rect.left;
+            controlsStartY = rect.top;
+            e.preventDefault();
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isDraggingControls) return;
+            const deltaX = e.clientX - dragStartX;
+            const deltaY = e.clientY - dragStartY;
+            const newX = controlsStartX + deltaX;
+            const newY = controlsStartY + deltaY;
+
+            // 화면 경계 체크
+            const maxX = window.innerWidth - controlsContainer.offsetWidth;
+            const maxY = window.innerHeight - controlsContainer.offsetHeight;
+
+            controlsContainer.style.left = Math.max(0, Math.min(newX, maxX)) + 'px';
+            controlsContainer.style.top = Math.max(0, Math.min(newY, maxY)) + 'px';
+            controlsContainer.style.right = 'auto';
+        });
+
+        window.addEventListener('mouseup', () => {
+            isDraggingControls = false;
+        });
+
+        // --- 마우스 드래그로 회전 ---
+        let isDragging = false;
+        let dragStartAngle = 0;
+        let dragStartRotation = 0;
+        const canvas = document.getElementById('mainCanvas');
+        canvas.addEventListener('mousedown', (e) => {
+            // 컨트롤러 영역 클릭 시에는 회전하지 않음
+            if (e.target.closest('.controls-container')) {
+                return;
+            }
+            isDragging = true;
+            const rect = canvas.getBoundingClientRect();
+            const cx = rect.left + rect.width/2;
+            const cy = rect.top + rect.height/2;
+            const dx = e.clientX - cx;
+            const dy = e.clientY - cy;
+            dragStartAngle = Math.atan2(dy, dx);
+            dragStartRotation = stateManager.globalRotation;
+        });
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const rect = canvas.getBoundingClientRect();
+            const cx = rect.left + rect.width/2;
+            const cy = rect.top + rect.height/2;
+            const dx = e.clientX - cx;
+            const dy = e.clientY - cy;
+            const angle = Math.atan2(dy, dx);
+            stateManager.globalRotation = dragStartRotation + (angle - dragStartAngle);
+            animationManager.syncAll();
+        });
+        window.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+    });
+
+    // SVG 원본 비율
+    const SVG_WIDTH = 841.89;
+    const SVG_HEIGHT = 595.28;
+    function resizeCanvas() {
+        const canvas = document.getElementById('mainCanvas');
+        const containerW = window.innerWidth;
+        const containerH = window.innerHeight;
+        const dpr = window.devicePixelRatio || 1;
+        // 비율 유지하며 최대 크기 계산
+        const scale = Math.min(containerW / SVG_WIDTH, containerH / SVG_HEIGHT);
+        const width = SVG_WIDTH * scale;
+        const height = SVG_HEIGHT * scale;
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+        canvas.style.width = width + 'px';
+        canvas.style.height = height + 'px';
+        // staticLayer도 동일하게 동기화
+        if (window.animationManager && window.animationManager.staticLayer) {
+            window.animationManager.staticLayer.width = width * dpr;
+            window.animationManager.staticLayer.height = height * dpr;
+        }
+    }
+
+// SVG 내보내기 함수
+    function exportToSVG(stateManager, animationManager) {
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.setAttribute("width", SVG_WIDTH);
+        svg.setAttribute("height", SVG_HEIGHT);
+        svg.setAttribute("viewBox", `0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`);
+
+        // 현재 상태의 모든 요소들을 SVG로 변환
+        for (let i = 1; i <= 5; i++) {
+            const morphs = stateManager.elementStates[i];
+            const shapes = animationManager.getShapes(i, morphs, Date.now(), 1234);
+            const elementColor = stateManager.elementColors[i];
+            const scale = stateManager.elementSizeMultipliers[i];
+
+            // 회전 그룹 생성
+            const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            group.setAttribute("transform", `rotate(${stateManager.globalRotation * 180 / Math.PI} ${SVG_WIDTH / 2} ${SVG_HEIGHT / 2})`);
+            group.setAttribute("stroke-linejoin", "round");
+            group.setAttribute("stroke-linecap", "round");
+
+            shapes.forEach(shape => {
+                let path;
+                switch (shape.type) {
+                    case 'pentagon':
+                        path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                        const points = shape.points.map(p => `${p.x},${p.y}`).join(" ");
+                        path.setAttribute("d", `M ${points} Z`);
+                        if (shape.fill) {
+                            path.setAttribute("fill", elementColor);
+                            path.setAttribute("stroke", "none");
+                        } else {
+                            path.setAttribute("fill", "none");
+                            path.setAttribute("stroke", elementColor);
+                            path.setAttribute("stroke-width", shape.lineWidth || 1);
+                        }
+                        group.appendChild(path);
+                        break;
+                    case 'wireprism':
+                        const pentArr = shape.pathPts.map(pt =>
+                            Utils.createPentagon(pt.x, pt.y, shape.size, shape.angle)
+                        );
+                        // 와이어프레임 선들
+                        for (let i = 0; i < 5; i++) {
+                            path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                            const d = pentArr.map((pts, j) =>
+                                (j === 0 ? "M" : "L") + ` ${pts[i].x},${pts[i].y}`
+                            ).join(" ");
+                            path.setAttribute("d", d);
+                            path.setAttribute("fill", "none");
+                            path.setAttribute("stroke", elementColor);
+                            path.setAttribute("stroke-width", shape.lineWidth || 1);
+                            group.appendChild(path);
+                        }
+                        // 시작과 끝 오각형
+                        [0, pentArr.length - 1].forEach(idx => {
+                            path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                            const pts = pentArr[idx];
+                            const d = `M ${pts[0].x},${pts[0].y} ` +
+                                pts.slice(1).map(p => `L ${p.x},${p.y}`).join(" ") +
+                                " Z";
+                            path.setAttribute("d", d);
+                            path.setAttribute("fill", "none");
+                            path.setAttribute("stroke", elementColor);
+                            path.setAttribute("stroke-width", shape.lineWidth || 1);
+                            group.appendChild(path);
+                        });
+                        break;
+                    case 'solidprism':
+                        const solidPentArr = shape.pathPts.map(pt =>
+                            Utils.createPentagon(pt.x, pt.y, shape.size, shape.angle)
+                        );
+                        // 각 면
+                        for (let i = 0; i < 5; i++) {
+                            path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                            const d = solidPentArr.map((pts, j) =>
+                                (j === 0 ? "M" : "L") + ` ${pts[i].x},${pts[i].y}`
+                            ).join(" ") +
+                                solidPentArr.slice().reverse().map((pts, j) =>
+                                    "L " + `${pts[(i + 1) % 5].x},${pts[(i + 1) % 5].y}`
+                                ).join(" ") + " Z";
+                            path.setAttribute("d", d);
+                            path.setAttribute("fill", shape.fillColor || "#fff");
+                            path.setAttribute("stroke", elementColor);
+                            path.setAttribute("stroke-width", shape.lineWidth || 1);
+                            group.appendChild(path);
+                        }
+                        break;
+                    case 'brush':
+                        // 브러시를 실제 경로로 변환
+                        const brushPoints = [];
+                        const first = shape.pathPts[0];
+                        const second = shape.pathPts[1];
+                        const last = shape.pathPts[shape.pathPts.length - 1];
+                        const secondLast = shape.pathPts[shape.pathPts.length - 2];
+
+                        // 시작점의 접선 각도 계산
+                        const startAngle = Math.atan2(second.y - first.y, second.x - first.x);
+                        const startOffsetX = Math.sin(startAngle) * shape.size / 2;
+                        const startOffsetY = -Math.cos(startAngle) * shape.size / 2;
+
+                        // 끝점의 접선 각도 계산
+                        const endAngle = Math.atan2(last.y - secondLast.y, last.x - secondLast.x);
+                        const endOffsetX = Math.sin(endAngle) * shape.size / 2;
+                        const endOffsetY = -Math.cos(endAngle) * shape.size / 2;
+
+                        // 시작점 추가
+                        brushPoints.push(`M ${first.x + startOffsetX},${first.y + startOffsetY}`);
+
+                        // 중간점들 추가
+                        for (let i = 1; i < shape.pathPts.length - 1; i++) {
+                            const prev = shape.pathPts[i - 1];
+                            const current = shape.pathPts[i];
+                            const next = shape.pathPts[i + 1];
+                            const angle = Math.atan2(next.y - prev.y, next.x - prev.x);
+                            const offsetX = Math.sin(angle) * shape.size / 2;
+                            const offsetY = -Math.cos(angle) * shape.size / 2;
+                            brushPoints.push(`L ${current.x + offsetX},${current.y + offsetY}`);
+                        }
+
+                        // 끝점 추가
+                        brushPoints.push(`L ${last.x + endOffsetX},${last.y + endOffsetY}`);
+
+                        // 반대 방향으로 경로 생성
+                        brushPoints.push(`L ${last.x - endOffsetX},${last.y - endOffsetY}`);
+
+                        // 중간점들 역방향 추가
+                        for (let i = shape.pathPts.length - 2; i > 0; i--) {
+                            const next = shape.pathPts[i + 1];
+                            const current = shape.pathPts[i];
+                            const prev = shape.pathPts[i - 1];
+                            const angle = Math.atan2(next.y - prev.y, next.x - prev.x);
+                            const offsetX = -Math.sin(angle) * shape.size / 2;
+                            const offsetY = Math.cos(angle) * shape.size / 2;
+                            brushPoints.push(`L ${current.x + offsetX},${current.y + offsetY}`);
+                        }
+
+                        // 시작점으로 돌아가기
+                        brushPoints.push(`L ${first.x - startOffsetX},${first.y - startOffsetY}`);
+                        brushPoints.push('Z');
+
+                        path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                        path.setAttribute("d", brushPoints.join(" "));
+                        path.setAttribute("fill", shape.fillColor || elementColor);
+                        path.setAttribute("stroke", "none");
+                        group.appendChild(path);
+                        break;
+                }
+            });
+            svg.appendChild(group);
+        }
+
+        // SVG 문자열로 변환
+        const serializer = new XMLSerializer();
+        const svgString = serializer.serializeToString(svg);
+
+        // 다운로드 링크 생성
+        const blob = new Blob([svgString], { type: "image/svg+xml" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "50주년_로고.svg";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+
+    // --- AutoPilot Class for Automation ---
+    class AutoPilot {
+        constructor(stateManager, interactionManager) {
+            this.stateManager = stateManager;
+            this.interactionManager = interactionManager; // Will need access to button clicks or state changes
+            this.isActive = true;
+            this.idleTimer = null;
+            this.intervalId = null;
+
+            this.init();
+        }
+
+        init() {
+            // idle detection
+            window.addEventListener('mousemove', () => this.onUserActivity());
+            window.addEventListener('click', () => this.onUserActivity());
+            window.addEventListener('keydown', () => this.onUserActivity());
+
+            // Start automation loop
+            this.startLoop();
+        }
+
+        onUserActivity() {
+            this.isActive = false;
+            this.stopLoop();
+
+            clearTimeout(this.idleTimer);
+            this.idleTimer = setTimeout(() => {
+                this.isActive = true;
+                this.startLoop();
+            }, 5000); // Resume after 5 seconds of inactivity
+        }
+
+        startLoop() {
+            if (this.intervalId) return;
+            this.intervalId = setInterval(() => {
+                if (!this.isActive) return;
+                this.performRandomAction();
+            }, 200); // Trigger action every 200ms (Doubled speed again)
+        }
+
+        stopLoop() {
+            clearInterval(this.intervalId);
+            this.intervalId = null;
+        }
+
+        performRandomAction() {
+            // Randomly toggle morph buttons
+            const buttons = document.querySelectorAll('.morph-button');
+            if (buttons.length > 0) {
+                const randomBtn = buttons[Math.floor(Math.random() * buttons.length)];
+                randomBtn.click(); // Simulate click to trigger existing logic
+            }
+
+            // Randomly change sliders (occasionally)
+            if (Math.random() < 0.3) {
+                const sliders = document.querySelectorAll('.size-slider');
+                const randomSlider = sliders[Math.floor(Math.random() * sliders.length)];
+                const newVal = 1 + Math.random() * 4; // 1 to 5
+                randomSlider.value = newVal;
+                randomSlider.dispatchEvent(new Event('input')); // Trigger change
+            }
+
+            // Randomly change colors (rarely)
+            if (Math.random() < 0.1) {
+                const colors = ['#000000', '#FF3B30', '#007AFF', '#34C759', '#5856D6', '#FF9500'];
+                const colorInputs = document.querySelectorAll('.color-button');
+                const randomInput = colorInputs[Math.floor(Math.random() * colorInputs.length)];
+                randomInput.value = colors[Math.floor(Math.random() * colors.length)];
+                randomInput.dispatchEvent(new Event('input'));
+            }
+        }
+    }
+
+    // Initialize AutoPilot when DOM is ready
+    window.addEventListener('DOMContentLoaded', () => {
+        // Assume StateManager instance exists or is created in existing script
+        // We'll hook into it at end of script execution
+        setTimeout(() => {
+            // Find the state manager or just pass null if we use DOM triggers
+            new AutoPilot(null, null);
+        }, 1000);
+    });
+    </script>
+</body>
+</html>
+

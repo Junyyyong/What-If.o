@@ -1,0 +1,5 @@
+{
+  "name": "HCMV",
+  "description": "Hexagonal Color Music Visualizer - A 3D/2D interactive pattern generator based on text input.",
+  "requestFramePermissions": []
+}
