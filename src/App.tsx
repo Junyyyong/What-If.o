@@ -224,7 +224,7 @@ function InteractionPage() {
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}>
             <iframe src={active} className="ix-frame" title="interaction" />
-            <button className="lb-close" onClick={() => setActive(null)}>✕</button>
+            <button className="ix-close" onClick={() => setActive(null)}>✕</button>
           </motion.div>
         )}
       </AnimatePresence>
