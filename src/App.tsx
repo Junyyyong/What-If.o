@@ -60,8 +60,19 @@ function ArchivePage({ open, search, category }: {
       c.name.toLowerCase().includes(search.toLowerCase()) ||
       c.creator.toLowerCase().includes(search.toLowerCase())
     );
-    if (sort === 'alphabetical') arr.sort((a, b) => a.name.localeCompare(b.name));
-    else arr.sort((a, b) => b.year - a.year);
+    if (sort === 'alphabetical') {
+      arr.sort((a, b) => {
+        if (a.pinned && !b.pinned) return -1;
+        if (!a.pinned && b.pinned) return 1;
+        return a.name.localeCompare(b.name);
+      });
+    } else {
+      arr.sort((a, b) => {
+        if (a.pinned && !b.pinned) return -1;
+        if (!a.pinned && b.pinned) return 1;
+        return b.year - a.year;
+      });
+    }
     return arr;
   }, [sort, search, category]);
 
@@ -83,6 +94,7 @@ function ArchivePage({ open, search, category }: {
             <div key={char.id} className={`arc-entry${clickable ? ' clickable' : ''}`}
               onClick={() => clickable && handleClick(char, open)}>
               <span className={char.placeholder ? 'strike' : ''}>{char.name}</span>
+              <span className="arc-creator">{char.creator}</span>
               <span className="arc-year">{char.year}</span>
             </div>
           );
@@ -100,7 +112,11 @@ function PreviewPage({ open, search, category }: {
     let arr = [...characters];
     if (category !== 'All') arr = arr.filter(c => c.category === category);
     if (search) arr = arr.filter(c => c.name.toLowerCase().includes(search.toLowerCase()));
-    return arr.sort((a, b) => a.name.localeCompare(b.name));
+    return arr.sort((a, b) => {
+      if (a.pinned && !b.pinned) return -1;
+      if (!a.pinned && b.pinned) return 1;
+      return a.name.localeCompare(b.name);
+    });
   }, [search, category]);
 
   return (
@@ -141,7 +157,7 @@ function FontPage() {
       <div className="font-list">
         {fonts.map(f => (
           <div key={f.id} className="font-item">
-            <div className="font-preview-text">{f.preview}</div>
+            <div className={`font-preview-text${f.id === 'po-emoji' ? ' po-emoji' : ''}`}>{f.preview}</div>
             <div className="font-row">
               <span className="font-name">{f.name}</span>
               <span className="font-dim">{f.styles} style{f.styles > 1 ? 's' : ''} · {f.fileSize}</span>
@@ -226,7 +242,7 @@ export default function App() {
       </div>
 
       {/* Row 6: Contact ————————————————— Categories */}
-      <div className="nav-row">
+      <div className="nav-row nav-row-last">
         <button className={`nav-btn${page === 'contact' ? ' active' : ''}`} onClick={() => setPage('contact')}>Contact</button>
         <select className="cat-select" value={category}
           onChange={e => setCategory(e.target.value as Category)}>

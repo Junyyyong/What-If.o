@@ -10,6 +10,15 @@ export interface Font {
 
 export const fonts: Font[] = [
   {
+    id: 'po-emoji',
+    name: 'PoEmoji',
+    description: 'An emoji typeface created alongside the What If.o character archive. Based on the visual language of Po.',
+    price: 'free',
+    preview: 'PoEmoji',
+    styles: 1,
+    fileSize: '—',
+  },
+  {
     id: 'ax-mono',
     name: 'AX Mono',
     description: 'A monospaced typeface designed for digital archives and data displays. Includes tabular numerals and extended Latin.',

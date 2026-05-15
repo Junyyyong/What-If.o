@@ -1,10 +1,18 @@
+/* ─── Custom fonts ───────────────────────────────────────────── */
+@font-face {
+  font-family: 'PoEmoji';
+  src: url('/fonts/PoEmoji.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 /* ─── Reset ──────────────────────────────────────────────────── */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 html, body, #root { height: 100%; }
 
 body {
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.5;
   color: #000;
   background: #fff;
@@ -30,6 +38,9 @@ button, select, input {
   align-items: baseline;
   justify-content: space-between;
   padding: 3px calc(100vw / 9);
+}
+
+.nav-row-last {
   border-bottom: 1px solid #000;
 }
 
@@ -111,7 +122,8 @@ button, select, input {
 .arc-entry.clickable { cursor: pointer; }
 .arc-entry.clickable:hover span:first-child { text-decoration: underline; }
 
-.arc-year  { color: #999; white-space: nowrap; flex-shrink: 0; }
+.arc-creator { color: #999; white-space: nowrap; flex-shrink: 0; }
+.arc-year    { color: #999; white-space: nowrap; flex-shrink: 0; }
 .strike    { text-decoration: line-through; }
 
 /* ─── Preview grid ───────────────────────────────────────────── */
@@ -152,6 +164,10 @@ button, select, input {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.font-preview-text.po-emoji {
+  font-family: 'PoEmoji', sans-serif;
 }
 
 .font-row {
