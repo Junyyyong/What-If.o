@@ -42,10 +42,15 @@ function useCharacters(): Character[] {
   const [chars, setChars] = useState<Character[]>(staticCharacters);
   useEffect(() => {
     if (!GOOGLE_SHEET_URL) return;
+    const pinned = staticCharacters.filter(c => c.pinned);
+    const pinnedNames = new Set(pinned.map(c => c.name));
     fetch(GOOGLE_SHEET_URL)
       .then(r => r.text())
-      .then(csv => setChars(parseSheetCSV(csv)))
-      .catch(() => {}); // fall back to static data on error
+      .then(csv => {
+        const sheetChars = parseSheetCSV(csv).filter(c => !pinnedNames.has(c.name));
+        setChars([...pinned, ...sheetChars]);
+      })
+      .catch(() => {});
   }, []);
   return chars;
 }

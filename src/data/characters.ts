@@ -22,7 +22,7 @@ export const characters: Character[] = [
     placeholder: false,
     pinned: true,
     thumbnail: '/characters/Po.jpg',
-    sheet: '/characters/Po.jpg',
+    url: 'https://www.behance.net/gallery/210641289/Portfoilo',
   },
 
   // ── 본인 캐릭터 (이미지 추가 전) ───────────────────────────────────
