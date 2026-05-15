@@ -140,10 +140,9 @@ button, select, input {
 .prev-img {
   width: 100%;
   aspect-ratio: 2 / 3;
-  object-fit: contain;
+  object-fit: cover;
   display: block;
   transition: opacity 0.15s;
-  background: #f0f0f0;
 }
 .prev-ph    { background: #f0f0f0; }
 .prev-label { font-size: 11px; padding: 4px 6px 6px; line-height: 1.4; }

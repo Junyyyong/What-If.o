@@ -39,10 +39,11 @@ function parseSheetCSV(csv: string): Character[] {
 }
 
 function useCharacters(): Character[] {
-  const [chars, setChars] = useState<Character[]>(staticCharacters);
+  const pinned = staticCharacters.filter(c => c.pinned);
+  const initial = GOOGLE_SHEET_URL ? pinned : staticCharacters;
+  const [chars, setChars] = useState<Character[]>(initial);
   useEffect(() => {
     if (!GOOGLE_SHEET_URL) return;
-    const pinned = staticCharacters.filter(c => c.pinned);
     const pinnedNames = new Set(pinned.map(c => c.name));
     fetch(GOOGLE_SHEET_URL)
       .then(r => r.text())
