@@ -12,7 +12,7 @@ export interface Font {
 export const fonts: Font[] = [
   {
     id: 'po-emoji',
-    name: 'PoEmoji',
+    name: 'POEMOJI',
     description: 'An emoji typeface created alongside the What If.o character archive. Based on the visual language of Po.',
     price: 'free',
     preview: 'PoEmoji',
