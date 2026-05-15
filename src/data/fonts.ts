@@ -6,6 +6,7 @@ export interface Font {
   preview: string;
   styles: number;
   fileSize: string;
+  file?: string;
 }
 
 export const fonts: Font[] = [
@@ -17,6 +18,7 @@ export const fonts: Font[] = [
     preview: 'PoEmoji',
     styles: 1,
     fileSize: '—',
+    file: '/fonts/PoEmoji.ttf',
   },
   {
     id: 'ax-mono',

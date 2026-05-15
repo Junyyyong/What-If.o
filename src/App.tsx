@@ -1,8 +1,54 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { characters } from './data/characters';
+import { characters as staticCharacters } from './data/characters';
 import { fonts } from './data/fonts';
 import type { Character } from './data/characters';
+import { GOOGLE_SHEET_URL } from './config';
+
+const VALID_CATEGORIES: Character['category'][] = ['Hero', 'Villain', 'Support', 'Neutral'];
+
+function parseSheetCSV(csv: string): Character[] {
+  const lines = csv.trim().split('\n').slice(1); // skip header row
+  return lines.map((line, i) => {
+    // handle quoted fields that may contain commas
+    const cols: string[] = [];
+    let cur = '', inQ = false;
+    for (const ch of line) {
+      if (ch === '"') { inQ = !inQ; }
+      else if (ch === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
+      else { cur += ch; }
+    }
+    cols.push(cur.trim());
+    const [id, name, rawCat, year, creator, placeholder, pinned, thumbnail, sheet, url] = cols;
+    const category = VALID_CATEGORIES.includes(rawCat as Character['category'])
+      ? (rawCat as Character['category'])
+      : 'Neutral';
+    return {
+      id: id || `WI-S${i}`,
+      name,
+      category,
+      year: parseInt(year) || 2025,
+      creator: creator || '',
+      placeholder: placeholder === 'true',
+      pinned: pinned === 'true',
+      thumbnail: thumbnail || undefined,
+      sheet: sheet || undefined,
+      url: url || undefined,
+    };
+  }).filter(c => c.name);
+}
+
+function useCharacters(): Character[] {
+  const [chars, setChars] = useState<Character[]>(staticCharacters);
+  useEffect(() => {
+    if (!GOOGLE_SHEET_URL) return;
+    fetch(GOOGLE_SHEET_URL)
+      .then(r => r.text())
+      .then(csv => setChars(parseSheetCSV(csv)))
+      .catch(() => {}); // fall back to static data on error
+  }, []);
+  return chars;
+}
 
 type Page = 'archive' | 'preview' | 'font' | 'about' | 'contact';
 type Sort  = 'alphabetical' | 'chronological';
@@ -48,8 +94,8 @@ function Fade({ children }: { children: React.ReactNode }) {
 }
 
 // ─── Archive ──────────────────────────────────────────────────────────────────
-function ArchivePage({ open, search, category }: {
-  open: (s: string) => void; search: string; category: Category;
+function ArchivePage({ open, search, category, characters }: {
+  open: (s: string) => void; search: string; category: Category; characters: Character[];
 }) {
   const [sort, setSort] = useState<Sort>('alphabetical');
 
@@ -74,7 +120,7 @@ function ArchivePage({ open, search, category }: {
       });
     }
     return arr;
-  }, [sort, search, category]);
+  }, [sort, search, category, characters]);
 
   return (
     <Fade>
@@ -105,8 +151,8 @@ function ArchivePage({ open, search, category }: {
 }
 
 // ─── Preview ──────────────────────────────────────────────────────────────────
-function PreviewPage({ open, search, category }: {
-  open: (s: string) => void; search: string; category: Category;
+function PreviewPage({ open, search, category, characters }: {
+  open: (s: string) => void; search: string; category: Category; characters: Character[];
 }) {
   const list = useMemo(() => {
     let arr = [...characters];
@@ -117,7 +163,7 @@ function PreviewPage({ open, search, category }: {
       if (!a.pinned && b.pinned) return 1;
       return a.name.localeCompare(b.name);
     });
-  }, [search, category]);
+  }, [search, category, characters]);
 
   return (
     <Fade>
@@ -147,17 +193,26 @@ function PreviewPage({ open, search, category }: {
 
 // ─── Font ─────────────────────────────────────────────────────────────────────
 function FontPage() {
+  const [previewText, setPreviewText] = useState('');
+
   return (
     <Fade>
       <div className="content-header">
         <span className="sort-btn on">listing</span>
         <span>Font: typeface listing</span>
-        <span />
+        <input
+          className="font-preview-input"
+          placeholder="Type to preview…"
+          value={previewText}
+          onChange={e => setPreviewText(e.target.value)}
+        />
       </div>
       <div className="font-list">
         {fonts.map(f => (
           <div key={f.id} className="font-item">
-            <div className={`font-preview-text${f.id === 'po-emoji' ? ' po-emoji' : ''}`}>{f.preview}</div>
+            <div className={`font-preview-text${f.id === 'po-emoji' ? ' po-emoji' : ''}`}>
+              {previewText || f.preview}
+            </div>
             <div className="font-row">
               <span className="font-name">{f.name}</span>
               <span className="font-dim">{f.styles} style{f.styles > 1 ? 's' : ''} · {f.fileSize}</span>
@@ -165,7 +220,9 @@ function FontPage() {
               <span className={`font-badge${f.price === 'free' ? ' free' : ''}`}>
                 {f.price === 'free' ? 'Free' : `$${f.price}`}
               </span>
-              <button className="font-dl">{f.price === 'free' ? 'Download' : 'Purchase'}</button>
+              {f.file
+                ? <a className="font-dl" href={f.file} download>{f.price === 'free' ? 'Download' : 'Purchase'}</a>
+                : <span className="font-dl font-dl-soon">{f.price === 'free' ? 'Soon' : 'Purchase'}</span>}
             </div>
           </div>
         ))}
@@ -175,7 +232,7 @@ function FontPage() {
 }
 
 // ─── About ────────────────────────────────────────────────────────────────────
-function AboutPage() {
+function AboutPage({ count }: { count: number }) {
   return (
     <Fade>
       <div className="content-header"><span /><span>About</span><span /></div>
@@ -183,7 +240,7 @@ function AboutPage() {
         <p>What If.o is an independent archive documenting original characters created by multiple designers. Each entry represents a unique character with its own design history, narrative context, and visual identity.</p>
         <p>The archive is organised alphabetically and updated each semester as new characters are introduced. All works are owned by their respective creators.</p>
         <p>The What If.o Font collection comprises typefaces developed alongside the character archive.</p>
-        <p>Founded 2025. Currently cataloguing {characters.length} characters.</p>
+        <p>Founded 2025. Currently cataloguing {count} characters.</p>
       </div>
     </Fade>
   );
@@ -210,6 +267,7 @@ export default function App() {
   const [search, setSearch]     = useState('');
   const [category, setCategory] = useState<Category>('All');
   const [lbSrc, setLbSrc]       = useState<string | null>(null);
+  const characters = useCharacters();
 
   return (
     <div className="app">
@@ -255,10 +313,10 @@ export default function App() {
       {/* Content */}
       <main className="main">
         <AnimatePresence mode="wait">
-          {page === 'archive' && <ArchivePage key="archive" open={setLbSrc} search={search} category={category} />}
-          {page === 'preview' && <PreviewPage key="preview" open={setLbSrc} search={search} category={category} />}
+          {page === 'archive' && <ArchivePage key="archive" open={setLbSrc} search={search} category={category} characters={characters} />}
+          {page === 'preview' && <PreviewPage key="preview" open={setLbSrc} search={search} category={category} characters={characters} />}
           {page === 'font'    && <FontPage    key="font" />}
-          {page === 'about'   && <AboutPage   key="about" />}
+          {page === 'about'   && <AboutPage   key="about" count={characters.length} />}
           {page === 'contact' && <ContactPage key="contact" />}
         </AnimatePresence>
       </main>
