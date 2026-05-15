@@ -5,6 +5,7 @@ import { fonts } from './data/fonts';
 import type { Character } from './data/characters';
 
 type Page = 'archive' | 'preview' | 'font' | 'about' | 'contact';
+type Sort  = 'alphabetical' | 'chronological';
 
 const NAV: { label: string; page: Page }[] = [
   { label: 'Archive', page: 'archive' },
@@ -13,6 +14,9 @@ const NAV: { label: string; page: Page }[] = [
   { label: 'About',   page: 'about'   },
   { label: 'Contact', page: 'contact' },
 ];
+
+const CATEGORIES = ['All', 'Hero', 'Villain', 'Support', 'Neutral'] as const;
+type Category = typeof CATEGORIES[number];
 
 function handleClick(char: Character, open: (s: string) => void) {
   if (char.sheet) open(char.sheet);
@@ -39,25 +43,53 @@ function Lightbox({ src, onClose }: { src: string; onClose: () => void }) {
   );
 }
 
-// ─── Sidebar ──────────────────────────────────────────────────────────────────
-function Sidebar({ page, setPage }: { page: Page; setPage: (p: Page) => void }) {
+// ─── Header ───────────────────────────────────────────────────────────────────
+function Header({
+  page, setPage, search, setSearch, category, setCategory,
+}: {
+  page: Page; setPage: (p: Page) => void;
+  search: string; setSearch: (s: string) => void;
+  category: Category; setCategory: (c: Category) => void;
+}) {
   return (
-    <aside className="sidebar">
-      <button className="site-title" onClick={() => setPage('archive')}>
-        What If.o
-      </button>
-      <nav className="sidebar-nav">
-        {NAV.map(({ label, page: p }) => (
-          <button
-            key={p}
-            className={`nav-btn${page === p ? ' active' : ''}`}
-            onClick={() => setPage(p)}
-          >
-            {label}
-          </button>
-        ))}
-      </nav>
-    </aside>
+    <header className="header">
+      <div className="header-left">
+        <button className="site-title" onClick={() => setPage('archive')}>
+          What If.o
+        </button>
+        <nav className="top-nav">
+          {NAV.map(({ label, page: p }) => (
+            <button
+              key={p}
+              className={`nav-btn${page === p ? ' active' : ''}`}
+              onClick={() => setPage(p)}
+            >
+              {label}
+            </button>
+          ))}
+        </nav>
+      </div>
+      <div className="header-right">
+        <select
+          className="cat-select"
+          value={category}
+          onChange={e => setCategory(e.target.value as Category)}
+        >
+          {CATEGORIES.map(c => (
+            <option key={c} value={c}>
+              {c === 'All' ? 'Categories: All' : c}
+            </option>
+          ))}
+        </select>
+        <input
+          className="search-input"
+          type="text"
+          placeholder="Search"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
+      </div>
+    </header>
   );
 }
 
@@ -67,7 +99,7 @@ function Fade({ children }: { children: React.ReactNode }) {
     <motion.div
       className="fade-wrap"
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      transition={{ duration: 0.12 }}
+      transition={{ duration: 0.1 }}
     >
       {children}
     </motion.div>
@@ -75,21 +107,47 @@ function Fade({ children }: { children: React.ReactNode }) {
 }
 
 // ─── Archive ──────────────────────────────────────────────────────────────────
-function ArchivePage({ open }: { open: (s: string) => void }) {
-  const sorted = useMemo(
-    () => [...characters].sort((a, b) => a.name.localeCompare(b.name)),
-    []
-  );
+function ArchivePage({
+  open, search, category,
+}: {
+  open: (s: string) => void;
+  search: string;
+  category: Category;
+}) {
+  const [sort, setSort] = useState<Sort>('alphabetical');
+
+  const filtered = useMemo(() => {
+    let list = [...characters];
+    if (category !== 'All') list = list.filter(c => c.category === category);
+    if (search) list = list.filter(c =>
+      c.name.toLowerCase().includes(search.toLowerCase()) ||
+      c.creator.toLowerCase().includes(search.toLowerCase())
+    );
+    if (sort === 'alphabetical') list.sort((a, b) => a.name.localeCompare(b.name));
+    else list.sort((a, b) => b.year - a.year);
+    return list;
+  }, [sort, search, category]);
 
   return (
     <Fade>
-      <div className="archive-header">
-        <span>alphabetical</span>
-        <span>Archive: directory listing</span>
-        <span>{characters.length} characters</span>
+      <div className="content-header">
+        <button
+          className={`sort-btn${sort === 'alphabetical' ? ' active' : ''}`}
+          onClick={() => setSort('alphabetical')}
+        >
+          alphabetical
+        </button>
+        <span className="content-title">Archive: directory listing</span>
+        <button
+          className={`sort-btn${sort === 'chronological' ? ' active' : ''}`}
+          onClick={() => setSort('chronological')}
+        >
+          chronological
+        </button>
       </div>
+
       <div className="archive-cols">
-        {sorted.map(char => {
+        {filtered.map(char => {
           const clickable = !!(char.sheet || char.url);
           return (
             <div
@@ -100,7 +158,7 @@ function ArchivePage({ open }: { open: (s: string) => void }) {
               <span className={char.placeholder ? 'strikethrough' : ''}>
                 {char.name}
               </span>
-              <span className="arc-meta">{char.year}</span>
+              <span className="arc-date">{char.year}</span>
             </div>
           );
         })}
@@ -110,21 +168,31 @@ function ArchivePage({ open }: { open: (s: string) => void }) {
 }
 
 // ─── Preview ──────────────────────────────────────────────────────────────────
-function PreviewPage({ open }: { open: (s: string) => void }) {
-  const sorted = useMemo(
-    () => [...characters].sort((a, b) => a.name.localeCompare(b.name)),
-    []
-  );
+function PreviewPage({
+  open, search, category,
+}: {
+  open: (s: string) => void;
+  search: string;
+  category: Category;
+}) {
+  const filtered = useMemo(() => {
+    let list = [...characters];
+    if (category !== 'All') list = list.filter(c => c.category === category);
+    if (search) list = list.filter(c =>
+      c.name.toLowerCase().includes(search.toLowerCase())
+    );
+    return list.sort((a, b) => a.name.localeCompare(b.name));
+  }, [search, category]);
 
   return (
     <Fade>
-      <div className="archive-header">
-        <span>alphabetical</span>
-        <span>Preview: directory listing</span>
-        <span>{characters.length} characters</span>
+      <div className="content-header">
+        <span className="sort-btn active">alphabetical</span>
+        <span className="content-title">Preview: directory listing</span>
+        <span></span>
       </div>
       <div className="preview-grid">
-        {sorted.map(char => {
+        {filtered.map(char => {
           const clickable = !!(char.sheet || char.url);
           const src = char.thumbnail ?? char.sheet;
           return (
@@ -152,10 +220,10 @@ function PreviewPage({ open }: { open: (s: string) => void }) {
 function FontPage() {
   return (
     <Fade>
-      <div className="archive-header">
-        <span>Font</span>
-        <span>typeface listing</span>
-        <span>{fonts.length} typefaces</span>
+      <div className="content-header">
+        <span className="sort-btn active">listing</span>
+        <span className="content-title">Font: typeface listing</span>
+        <span></span>
       </div>
       <div className="font-list">
         {fonts.map(f => (
@@ -183,9 +251,9 @@ function FontPage() {
 function AboutPage() {
   return (
     <Fade>
-      <div className="archive-header">
-        <span>About</span>
+      <div className="content-header">
         <span></span>
+        <span className="content-title">About</span>
         <span></span>
       </div>
       <div className="text-body">
@@ -206,9 +274,9 @@ function AboutPage() {
 function ContactPage() {
   return (
     <Fade>
-      <div className="archive-header">
-        <span>Contact</span>
+      <div className="content-header">
         <span></span>
+        <span className="content-title">Contact</span>
         <span></span>
       </div>
       <div className="text-body">
@@ -225,17 +293,27 @@ function ContactPage() {
 
 // ─── App ──────────────────────────────────────────────────────────────────────
 export default function App() {
-  const [page, setPage] = useState<Page>('archive');
-  const [lbSrc, setLbSrc] = useState<string | null>(null);
+  const [page, setPage]         = useState<Page>('archive');
+  const [search, setSearch]     = useState('');
+  const [category, setCategory] = useState<Category>('All');
+  const [lbSrc, setLbSrc]       = useState<string | null>(null);
 
   return (
     <div className="app">
-      <Sidebar page={page} setPage={setPage} />
+      <Header
+        page={page} setPage={setPage}
+        search={search} setSearch={setSearch}
+        category={category} setCategory={setCategory}
+      />
 
       <main className="main">
         <AnimatePresence mode="wait">
-          {page === 'archive' && <ArchivePage key="archive" open={setLbSrc} />}
-          {page === 'preview' && <PreviewPage key="preview" open={setLbSrc} />}
+          {page === 'archive' && (
+            <ArchivePage key="archive" open={setLbSrc} search={search} category={category} />
+          )}
+          {page === 'preview' && (
+            <PreviewPage key="preview" open={setLbSrc} search={search} category={category} />
+          )}
           {page === 'font'    && <FontPage    key="font" />}
           {page === 'about'   && <AboutPage   key="about" />}
           {page === 'contact' && <ContactPage key="contact" />}
