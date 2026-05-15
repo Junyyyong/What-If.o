@@ -12,13 +12,13 @@ export interface Font {
 export const fonts: Font[] = [
   {
     id: 'po-emoji',
-    name: 'POEMOJI',
+    name: 'PoEmoji',
     description: 'An emoji typeface created alongside the What If.o character archive. Based on the visual language of Po.',
     price: 'free',
-    preview: 'PoEmoji',
+    preview: 'POEMOJI',
     styles: 1,
     fileSize: '—',
-    file: '/fonts/PoEmoji.ttf',
+    file: '/fonts/POEMOJI.ttf',
   },
   {
     id: 'ax-mono',
