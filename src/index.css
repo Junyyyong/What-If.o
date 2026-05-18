@@ -256,10 +256,9 @@ button, select, input {
 
 /* ─── Text pages ─────────────────────────────────────────────── */
 .text-body {
-  max-width: 480px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 40px;
   padding-top: 4px;
 }
 .text-body p  { line-height: 1.7; }
