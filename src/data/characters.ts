@@ -33,5 +33,5 @@ export const characters: Character[] = [
   { id: 'WI-008', name: 'Puddin',   category: 'Neutral', year: 2025, creator: 'Naseon', placeholder: false, thumbnail: '/characters/Puddin_Naseon_2025.png' },
   { id: 'WI-009', name: 'Starry',   category: 'Neutral', year: 2025, creator: 'Chu',    placeholder: false, thumbnail: '/characters/Starry_Chu_2025.png' },
   { id: 'WI-010', name: 'Woo-Tang', category: 'Neutral', year: 2025, creator: 'Sung',   placeholder: false, thumbnail: '/characters/Woo-Tang_Sung_2025.png' },
-  { id: 'WI-011', name: 'Mongsille', category: 'Neutral', year: 2025, creator: 'Hanzhang', placeholder: false, thumbnail: '/characters/Mongsille_Hanzhang_2025.jpg', url: 'https://www.instagram.com/mongsilee_2025?igsh=MXBlaG54ejIwMDVvdw==' },
+  { id: 'WI-011', name: 'Mongsille', category: 'Neutral', year: 2025, creator: 'Hanzhang', placeholder: false, thumbnail: '/characters/Mongsille_Hanzhang_2025.png', url: 'https://www.instagram.com/mongsilee_2025?igsh=MXBlaG54ejIwMDVvdw==' },
 ];

@@ -171,7 +171,6 @@ button, select, input {
   break-inside: avoid;
   line-height: 1.75;
   cursor: default;
-  padding-right: 12px;
   border-bottom: 1px solid #000;
 }
 .arc-entry.clickable { cursor: pointer; }
