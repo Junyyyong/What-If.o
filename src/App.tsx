@@ -251,7 +251,7 @@ function FontPage() {
       <div className="font-list">
         {fonts.map(f => (
           <div key={f.id} className="font-item">
-            <div className={`font-preview-text${f.id === 'po-emoji' ? ' po-emoji' : ''}`}>
+            <div className="font-preview-text" style={{ fontFamily: `'${f.name}', sans-serif` }}>
               {previewText || f.preview}
             </div>
             <div className="font-row">
