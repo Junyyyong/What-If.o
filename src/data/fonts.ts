@@ -111,6 +111,16 @@ export const fonts: Font[] = [
     file: '/fonts/Pudding.otf',
   },
   {
+    id: 'mongsille',
+    name: 'Mongsille',
+    description: '',
+    price: 'free',
+    preview: 'Mongsille',
+    styles: 1,
+    fileSize: '31 KB',
+    file: '/fonts/Mongsille.otf',
+  },
+  {
     id: 'po-emoji',
     name: 'PoEmoji',
     description: 'An emoji typeface created alongside the What If.o character archive. Based on the visual language of Po.',

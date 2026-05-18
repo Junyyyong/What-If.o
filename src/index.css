@@ -50,6 +50,11 @@
   font-weight: normal; font-style: normal;
 }
 @font-face {
+  font-family: 'Mongsille';
+  src: url('/fonts/Mongsille.otf') format('opentype');
+  font-weight: normal; font-style: normal;
+}
+@font-face {
   font-family: 'PoEmoji';
   src: url('/fonts/POEMOJI.ttf') format('truetype');
   font-weight: normal; font-style: normal;
@@ -167,6 +172,7 @@ button, select, input {
   line-height: 1.75;
   cursor: default;
   padding-right: 12px;
+  border-bottom: 1px solid #000;
 }
 .arc-entry.clickable { cursor: pointer; }
 .arc-entry.clickable:hover span:first-child { text-decoration: underline; }
