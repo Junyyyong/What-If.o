@@ -133,11 +133,11 @@ function ArchivePage({ open, search, category, characters }: {
     <Fade>
       <div className="content-header">
         <button className={`sort-btn${sort === 'alphabetical' ? ' on' : ''}`} onClick={() => setSort('alphabetical')}>
-          alphabetical
+          A–Z
         </button>
         <span>Archive: directory listing</span>
         <button className={`sort-btn${sort === 'chronological' ? ' on' : ''}`} onClick={() => setSort('chronological')}>
-          chronological
+          Year
         </button>
       </div>
       <div className="archive-cols">
@@ -175,7 +175,7 @@ function PreviewPage({ open, search, category, characters }: {
   return (
     <Fade>
       <div className="content-header">
-        <span className="sort-btn on">alphabetical</span>
+        <span className="sort-btn on">A–Z</span>
         <span>Preview: directory listing</span>
         <span />
       </div>
