@@ -164,7 +164,8 @@ button, select, input {
 
 /* ─── Archive: 7 newspaper columns ──────────────────────────── */
 .archive-cols {
-  columns: 7;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
   column-gap: 24px;
   padding-top: 4px;
 }
@@ -173,7 +174,7 @@ button, select, input {
   display: grid;
   grid-template-columns: 1fr auto auto;
   gap: 0 8px;
-  break-inside: avoid;
+  align-content: start;
   line-height: 1.75;
   cursor: default;
   border-bottom: 1px solid #000;
@@ -340,12 +341,12 @@ button, select, input {
 /* ─── Responsive ─────────────────────────────────────────────── */
 @media (max-width: 1024px) {
   .nav-row, .main { padding-left: calc(100vw / 7); padding-right: calc(100vw / 7); }
-  .archive-cols   { columns: 5; }
+  .archive-cols   { grid-template-columns: repeat(5, 1fr); }
   .preview-grid   { grid-template-columns: repeat(5, 1fr); }
 }
 
 @media (max-width: 700px) {
   .nav-row, .main { padding-left: 16px; padding-right: 16px; }
-  .archive-cols   { columns: 2; }
+  .archive-cols   { grid-template-columns: repeat(2, 1fr); }
   .preview-grid   { grid-template-columns: repeat(3, 1fr); }
 }
