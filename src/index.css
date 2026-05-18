@@ -161,7 +161,7 @@ button, select, input {
 /* ─── Archive: 7 newspaper columns ──────────────────────────── */
 .archive-cols {
   columns: 7;
-  column-gap: 0;
+  column-gap: 24px;
 }
 
 .arc-entry {
