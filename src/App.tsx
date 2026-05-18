@@ -189,7 +189,9 @@ function PreviewPage({ open, search, category, characters }: {
               {src
                 ? <img src={src} className="prev-img" alt={char.name} />
                 : <div className="prev-img prev-ph" />}
-              <div className={`prev-label${char.placeholder ? ' strike' : ''}`}>{char.name}</div>
+              <div className={`prev-label${char.placeholder ? ' strike' : ''}`}>
+                {char.creator}, 〈{char.name}〉, {char.year}.
+              </div>
             </div>
           );
         })}

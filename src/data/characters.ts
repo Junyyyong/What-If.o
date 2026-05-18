@@ -20,7 +20,7 @@ export const characters: Character[] = [
     creator: 'Yong',
     placeholder: false,
     pinned: true,
-    thumbnail: '/characters/Po.jpg',
+    thumbnail: '/characters/Po_Yong_2023.png',
     url: 'https://www.behance.net/gallery/210641289/Portfoilo',
   },
   { id: 'WI-001', name: 'Dolin',    category: 'Neutral', year: 2025, creator: 'Jin',    placeholder: false, thumbnail: '/characters/Dolin_Jin_2025.png' },
