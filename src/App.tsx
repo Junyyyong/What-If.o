@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { characters as staticCharacters } from './data/characters';
 import { fonts } from './data/fonts';
@@ -194,10 +194,26 @@ function PreviewPage({ open, search, characters }: {
   );
 }
 
+const AX_BASE_W = 1600;
+const AX_BASE_H = Math.round(AX_BASE_W * 9 / 16);
+
 // ─── Interaction ──────────────────────────────────────────────────────────────
 function InteractionPage() {
   const [active, setActive] = useState<string | null>(null);
+  const embedRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
   const ax = interactions.find(i => i.id === 'AX')!;
+
+  useEffect(() => {
+    const update = () => {
+      if (embedRef.current) {
+        setScale(embedRef.current.offsetWidth / AX_BASE_W);
+      }
+    };
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
 
   return (
     <Fade>
@@ -207,9 +223,19 @@ function InteractionPage() {
         <span />
       </div>
 
-      {/* AX 기본 임베드 */}
-      <div className="ix-embed">
-        <iframe src={ax.path} className="ix-embed-frame" title="AX" />
+      {/* AX 기본 임베드 — 비율 유지 스케일 */}
+      <div className="ix-embed" ref={embedRef}>
+        <iframe
+          src={ax.path}
+          title="AX"
+          style={{
+            width: AX_BASE_W,
+            height: AX_BASE_H,
+            border: 'none',
+            transformOrigin: 'top left',
+            transform: `scale(${scale})`,
+          }}
+        />
       </div>
 
       {/* 7단 그리드 목록 */}
