@@ -12,7 +12,6 @@ export interface Character {
 }
 
 export const characters: Character[] = [
-  // ── 고정 캐릭터 ────────────────────────────────────────────────────
   {
     id: 'WI-000',
     name: 'Po',
@@ -24,28 +23,14 @@ export const characters: Character[] = [
     thumbnail: '/characters/Po.jpg',
     url: 'https://www.behance.net/gallery/210641289/Portfoilo',
   },
-
-  // ── 본인 캐릭터 (이미지 추가 전) ───────────────────────────────────
-  { id: 'WI-001', name: 'Aegis',  category: 'Hero',    year: 2025, creator: 'Yong',  placeholder: true },
-  { id: 'WI-002', name: 'Aether', category: 'Neutral', year: 2025, creator: 'Yong',  placeholder: true },
-  { id: 'WI-003', name: 'Arc',    category: 'Hero',    year: 2025, creator: 'Yong',  placeholder: true },
-
-  // ── 외부 창작자 ────────────────────────────────────────────────────
-  { id: 'WI-004', name: 'Aurora',  category: 'Support', year: 2025, creator: 'Alice',  placeholder: true },
-  { id: 'WI-005', name: 'Axis',    category: 'Villain', year: 2025, creator: 'Bob',    placeholder: true },
-  { id: 'WI-006', name: 'Blaze',   category: 'Hero',    year: 2025, creator: 'Carol',  placeholder: true },
-  { id: 'WI-007', name: 'Bolt',    category: 'Neutral', year: 2025, creator: 'David',  placeholder: true },
-  { id: 'WI-008', name: 'Brom',    category: 'Villain', year: 2025, creator: 'Eve',    placeholder: true },
-  { id: 'WI-009', name: 'Cipher',  category: 'Villain', year: 2025, creator: 'Frank',  placeholder: true },
-  { id: 'WI-010', name: 'Crest',   category: 'Hero',    year: 2025, creator: 'Grace',  placeholder: true },
-  { id: 'WI-011', name: 'Cyan',    category: 'Support', year: 2025, creator: 'Hank',   placeholder: true },
-  { id: 'WI-012', name: 'Dawn',    category: 'Support', year: 2025, creator: 'Iris',   placeholder: true },
-  { id: 'WI-013', name: 'Delta',   category: 'Neutral', year: 2025, creator: 'Jack',   placeholder: true },
-  { id: 'WI-014', name: 'Dusk',    category: 'Villain', year: 2025, creator: 'Kate',   placeholder: true },
-  { id: 'WI-015', name: 'Echo',    category: 'Support', year: 2025, creator: 'Leo',    placeholder: true },
-  { id: 'WI-016', name: 'Edge',    category: 'Hero',    year: 2025, creator: 'Mia',    placeholder: true },
-  { id: 'WI-017', name: 'Ember',   category: 'Neutral', year: 2025, creator: 'Noah',   placeholder: true },
-  { id: 'WI-018', name: 'Frost',   category: 'Hero',    year: 2025, creator: 'Olivia', placeholder: true },
-  { id: 'WI-019', name: 'Flux',    category: 'Neutral', year: 2025, creator: 'Paul',   placeholder: true },
-  { id: 'WI-020', name: 'Gale',    category: 'Support', year: 2025, creator: 'Quinn',  placeholder: true },
+  { id: 'WI-001', name: 'Dolin',    category: 'Neutral', year: 2025, creator: 'Jin',    placeholder: false, thumbnail: '/characters/Dolin_Jin_2025.png' },
+  { id: 'WI-002', name: 'Dust',     category: 'Neutral', year: 2025, creator: 'Eun',    placeholder: false, thumbnail: '/characters/Dust_Eun_2025.png' },
+  { id: 'WI-003', name: 'Gomnigiri',category: 'Neutral', year: 2025, creator: 'Min',    placeholder: false, thumbnail: '/characters/Gomnigiri_Min_2025.png' },
+  { id: 'WI-004', name: 'Hongbi',   category: 'Neutral', year: 2025, creator: 'Hye',    placeholder: false, thumbnail: '/characters/Hongbi_Hye_2025.png' },
+  { id: 'WI-005', name: 'Lulumi',   category: 'Neutral', year: 2025, creator: 'Mi',     placeholder: false, thumbnail: '/characters/Lulumi_Mi_2025.png' },
+  { id: 'WI-006', name: 'Marmelo',  category: 'Neutral', year: 2025, creator: 'lyn',    placeholder: false, thumbnail: '/characters/Marmelo-lyn_2025.png' },
+  { id: 'WI-007', name: 'Nubi',     category: 'Neutral', year: 2025, creator: 'Yejin',  placeholder: false, thumbnail: '/characters/Nubi_Yejin_2025.png' },
+  { id: 'WI-008', name: 'Puddin',   category: 'Neutral', year: 2025, creator: 'Naseon', placeholder: false, thumbnail: '/characters/Puddin_Naseon_2025.png' },
+  { id: 'WI-009', name: 'Starry',   category: 'Neutral', year: 2025, creator: 'Chu',    placeholder: false, thumbnail: '/characters/Starry_Chu_2025.png' },
+  { id: 'WI-010', name: 'Woo-Tang', category: 'Neutral', year: 2025, creator: 'Sung',   placeholder: false, thumbnail: '/characters/Woo-Tang_Sung_2025.png' },
 ];
