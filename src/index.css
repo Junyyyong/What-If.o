@@ -94,6 +94,10 @@ button, select, input {
   padding: 3px calc(100vw / 9);
 }
 
+.nav-row-title {
+  padding-bottom: 12px;
+}
+
 .nav-row-last {
   border-bottom: 1px solid #000;
 }
@@ -145,7 +149,7 @@ button, select, input {
   align-items: baseline;
   border-bottom: 1px solid #000;
   padding-bottom: 3px;
-  margin-bottom: 6px;
+  margin-bottom: 0;
 }
 
 .sort-btn {
@@ -162,6 +166,7 @@ button, select, input {
 .archive-cols {
   columns: 7;
   column-gap: 24px;
+  padding-top: 4px;
 }
 
 .arc-entry {
@@ -183,7 +188,7 @@ button, select, input {
 /* ─── Preview grid ───────────────────────────────────────────── */
 .preview-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(8, 1fr);
   gap: 0;
 }
 
@@ -272,6 +277,19 @@ button, select, input {
 .text-link:hover { text-decoration: none; }
 .contact-note { color: #999; border-top: 1px solid #000; padding-top: 10px; }
 
+/* ─── Interaction embed ──────────────────────────────────────── */
+.ix-embed {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  margin-bottom: 0;
+}
+.ix-embed-frame {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+
 /* ─── Interaction fullscreen ─────────────────────────────────── */
 .ix-backdrop {
   position: fixed;
@@ -335,5 +353,4 @@ button, select, input {
   .nav-row, .main { padding-left: 16px; padding-right: 16px; }
   .archive-cols   { columns: 2; }
   .preview-grid   { grid-template-columns: repeat(3, 1fr); }
-  .cat-select     { display: none; }
 }

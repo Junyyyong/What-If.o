@@ -9,9 +9,8 @@ import { GOOGLE_SHEET_URL } from './config';
 const VALID_CATEGORIES: Character['category'][] = ['Hero', 'Villain', 'Support', 'Neutral'];
 
 function parseSheetCSV(csv: string): Character[] {
-  const lines = csv.trim().split('\n').slice(1); // skip header row
+  const lines = csv.trim().split('\n').slice(1);
   return lines.map((line, i) => {
-    // handle quoted fields that may contain commas
     const cols: string[] = [];
     let cur = '', inQ = false;
     for (const ch of line) {
@@ -60,9 +59,6 @@ function useCharacters(): Character[] {
 type Page = 'archive' | 'preview' | 'interaction' | 'font' | 'about' | 'contact';
 type Sort  = 'alphabetical' | 'chronological';
 
-const CATEGORIES = ['All', 'Hero', 'Villain', 'Support', 'Neutral'] as const;
-type Category = typeof CATEGORIES[number];
-
 function handleClick(char: Character, open: (s: string) => void) {
   if (char.sheet) open(char.sheet);
   else if (char.url) window.open(char.url, '_blank', 'noopener,noreferrer');
@@ -101,14 +97,13 @@ function Fade({ children }: { children: React.ReactNode }) {
 }
 
 // ─── Archive ──────────────────────────────────────────────────────────────────
-function ArchivePage({ open, search, category, characters }: {
-  open: (s: string) => void; search: string; category: Category; characters: Character[];
+function ArchivePage({ open, search, characters }: {
+  open: (s: string) => void; search: string; characters: Character[];
 }) {
   const [sort, setSort] = useState<Sort>('alphabetical');
 
   const list = useMemo(() => {
     let arr = [...characters];
-    if (category !== 'All') arr = arr.filter(c => c.category === category);
     if (search) arr = arr.filter(c =>
       c.name.toLowerCase().includes(search.toLowerCase()) ||
       c.creator.toLowerCase().includes(search.toLowerCase())
@@ -127,7 +122,7 @@ function ArchivePage({ open, search, category, characters }: {
       });
     }
     return arr;
-  }, [sort, search, category, characters]);
+  }, [sort, search, characters]);
 
   return (
     <Fade>
@@ -135,7 +130,7 @@ function ArchivePage({ open, search, category, characters }: {
         <button className={`sort-btn${sort === 'alphabetical' ? ' on' : ''}`} onClick={() => setSort('alphabetical')}>
           A–Z
         </button>
-        <span>Archive: directory listing</span>
+        <span>Archive</span>
         <button className={`sort-btn${sort === 'chronological' ? ' on' : ''}`} onClick={() => setSort('chronological')}>
           Year
         </button>
@@ -158,25 +153,24 @@ function ArchivePage({ open, search, category, characters }: {
 }
 
 // ─── Preview ──────────────────────────────────────────────────────────────────
-function PreviewPage({ open, search, category, characters }: {
-  open: (s: string) => void; search: string; category: Category; characters: Character[];
+function PreviewPage({ open, search, characters }: {
+  open: (s: string) => void; search: string; characters: Character[];
 }) {
   const list = useMemo(() => {
     let arr = [...characters];
-    if (category !== 'All') arr = arr.filter(c => c.category === category);
     if (search) arr = arr.filter(c => c.name.toLowerCase().includes(search.toLowerCase()));
     return arr.sort((a, b) => {
       if (a.pinned && !b.pinned) return -1;
       if (!a.pinned && b.pinned) return 1;
       return a.name.localeCompare(b.name);
     });
-  }, [search, category, characters]);
+  }, [search, characters]);
 
   return (
     <Fade>
       <div className="content-header">
         <span className="sort-btn on">A–Z</span>
-        <span>Preview: directory listing</span>
+        <span>Preview</span>
         <span />
       </div>
       <div className="preview-grid">
@@ -203,19 +197,28 @@ function PreviewPage({ open, search, category, characters }: {
 // ─── Interaction ──────────────────────────────────────────────────────────────
 function InteractionPage() {
   const [active, setActive] = useState<string | null>(null);
+  const ax = interactions.find(i => i.id === 'AX')!;
 
   return (
     <Fade>
       <div className="content-header">
-        <span className="sort-btn on">listing</span>
-        <span>Interaction: directory listing</span>
+        <span className="sort-btn on">A–Z</span>
+        <span>Interaction</span>
         <span />
       </div>
-      <div className="archive-cols" style={{ columns: 3 }}>
+
+      {/* AX 기본 임베드 */}
+      <div className="ix-embed">
+        <iframe src={ax.path} className="ix-embed-frame" title="AX" />
+      </div>
+
+      {/* 7단 그리드 목록 */}
+      <div className="archive-cols">
         {interactions.map(item => (
           <div key={item.id} className="arc-entry clickable"
             onClick={() => setActive(item.path)}>
             <span>{item.title}</span>
+            <span className="arc-year">{item.year}</span>
           </div>
         ))}
       </div>
@@ -241,8 +244,8 @@ function FontPage() {
   return (
     <Fade>
       <div className="content-header">
-        <span className="sort-btn on">listing</span>
-        <span>Font: typeface listing</span>
+        <span className="sort-btn on">A–Z</span>
+        <span>Font</span>
         <input
           className="font-preview-input"
           placeholder="Type to preview…"
@@ -313,17 +316,16 @@ function ContactPage() {
 
 // ─── App ──────────────────────────────────────────────────────────────────────
 export default function App() {
-  const [page, setPage]         = useState<Page>('archive');
-  const [search, setSearch]     = useState('');
-  const [category, setCategory] = useState<Category>('All');
-  const [lbSrc, setLbSrc]       = useState<string | null>(null);
+  const [page, setPage]     = useState<Page>('archive');
+  const [search, setSearch] = useState('');
+  const [lbSrc, setLbSrc]   = useState<string | null>(null);
   const characters = useCharacters();
 
   return (
     <div className="app">
 
       {/* Row 1: What If.o ————————————————————— Search */}
-      <div className="nav-row">
+      <div className="nav-row nav-row-title">
         <button className="site-title" onClick={() => setPage('archive')}>What If.o</button>
         <input className="search-input" placeholder="Search" value={search}
           onChange={e => setSearch(e.target.value)} />
@@ -354,26 +356,20 @@ export default function App() {
         <button className={`nav-btn${page === 'about' ? ' active' : ''}`} onClick={() => setPage('about')}>About</button>
       </div>
 
-      {/* Row 7: Contact ————————————————— Categories */}
+      {/* Row 7: Contact */}
       <div className="nav-row nav-row-last">
         <button className={`nav-btn${page === 'contact' ? ' active' : ''}`} onClick={() => setPage('contact')}>Contact</button>
-        <select className="cat-select" value={category}
-          onChange={e => setCategory(e.target.value as Category)}>
-          {CATEGORIES.map(c => (
-            <option key={c} value={c}>{c === 'All' ? 'Categories: All' : c}</option>
-          ))}
-        </select>
       </div>
 
       {/* Content */}
       <main className="main">
         <AnimatePresence mode="wait">
-          {page === 'archive' && <ArchivePage key="archive" open={setLbSrc} search={search} category={category} characters={characters} />}
-          {page === 'preview' && <PreviewPage key="preview" open={setLbSrc} search={search} category={category} characters={characters} />}
+          {page === 'archive'     && <ArchivePage     key="archive"     open={setLbSrc} search={search} characters={characters} />}
+          {page === 'preview'     && <PreviewPage     key="preview"     open={setLbSrc} search={search} characters={characters} />}
           {page === 'interaction' && <InteractionPage key="interaction" />}
-          {page === 'font'    && <FontPage    key="font" />}
-          {page === 'about'   && <AboutPage   key="about" count={characters.length} />}
-          {page === 'contact' && <ContactPage key="contact" />}
+          {page === 'font'        && <FontPage        key="font" />}
+          {page === 'about'       && <AboutPage       key="about" count={characters.length} />}
+          {page === 'contact'     && <ContactPage     key="contact" />}
         </AnimatePresence>
       </main>
 
