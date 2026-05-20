@@ -13,4 +13,5 @@ export const interactions: Interaction[] = [
   { id: 'emojition',          title: 'EMOJITION',          path: '/interaction/emojition/index.html',                     year: 2024 },
   { id: 'hcmv',               title: 'HCMV',               path: '/interaction/hcmv/dist/index.html',                     year: 2024 },
   { id: 'openresearchstudio', title: 'OPENRESEARCHSTUDIO', path: '/interaction/openresearchstudio/dist/index.html',        year: 2026 },
+  { id: 'noisetype',          title: 'NOISE TYPE',         path: '/interaction/NoiseType/index.html',                     year: 2026 },
 ];

@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NOISE FONT — Variable</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0d0d0d;
+      color: #e8e8e8;
+      font-family: 'Courier New', monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ─── Header ─────────────────────────────────────────────── */
+    header {
+      padding: 28px 28px 22px;
+      border-bottom: 1px solid #1c1c1c;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 28px;
+      flex-wrap: wrap;
+    }
+
+    .title {
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      opacity: 0.75;
+      line-height: 2;
+      white-space: nowrap;
+    }
+
+    .controls {
+      flex: 1;
+      max-width: 640px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-width: 320px;
+    }
+
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .ax {
+      font-size: 9px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      opacity: 0.6;
+      white-space: nowrap;
+    }
+
+    input[type=range] {
+      flex: 1;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 1px;
+      background: #2a2a2a;
+      outline: none;
+      cursor: pointer;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 12px; height: 12px;
+      background: #ccc;
+      cursor: pointer;
+      border-radius: 0;
+    }
+
+    .num { font-size: 10px; opacity: 0.85; min-width: 30px; text-align: right; }
+
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    button {
+      background: transparent;
+      border: 1px solid #555;
+      color: #e8e8e8;
+      font-family: 'Courier New', monospace;
+      font-size: 9px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      padding: 5px 12px;
+      cursor: pointer;
+    }
+    button.on { background: #bbb; color: #0d0d0d; border-color: #bbb; }
+    button:hover:not(.on) { border-color: #666; }
+
+    .speed-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .speed-row input { width: 80px; }
+
+    .hint {
+      font-size: 9px;
+      letter-spacing: 0.14em;
+      opacity: 0.5;
+      text-transform: uppercase;
+    }
+
+    /* ─── Main split layout ─────────────────────────────────── */
+    main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 3fr 7fr;
+      min-height: 0;
+    }
+
+    .panel {
+      padding: 28px;
+      overflow-y: auto;
+      min-height: 0;
+    }
+    .panel-left {
+      border-right: 1px solid #1c1c1c;
+    }
+
+    .panel-title {
+      font-size: 11px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      opacity: 0.85;
+      margin-bottom: 18px;
+    }
+
+    /* ─── Specimen (left) ───────────────────────────────────── */
+    .spec-section { margin-bottom: 22px; }
+    .sec-label {
+      font-size: 9px; letter-spacing: 0.22em;
+      text-transform: uppercase; opacity: 0.6; margin-bottom: 8px;
+    }
+    .glyph-row { display: flex; flex-wrap: wrap; gap: 3px; }
+    .glyph-cell { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+    .glyph-cell canvas {
+      display: block;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+    .glyph-char { font-size: 9px; opacity: 0.55; }
+
+    /* ─── Input area (right) ────────────────────────────────── */
+    .panel-right { display: flex; flex-direction: column; gap: 18px; }
+
+    textarea {
+      width: 100%;
+      background: transparent;
+      border: 1px solid #2a2a2a;
+      color: #ddd;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      letter-spacing: 0.12em;
+      padding: 14px 16px;
+      outline: none;
+      resize: vertical;
+      min-height: 70px;
+      max-height: 180px;
+    }
+    textarea:focus { border-color: #555; }
+    textarea::placeholder { opacity: 0.22; }
+
+    .render-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 12px 0 0;
+      min-height: 0;
+      overflow-y: auto;
+    }
+    .render-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      min-height: 1em;
+    }
+    .render-cell canvas {
+      display: block;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+    .render-space {
+      flex-shrink: 0;
+    }
+
+    /* ─── Responsive ────────────────────────────────────────── */
+    @media (max-width: 900px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+      .panel-left {
+        order: 2;                /* SPECIMEN goes below */
+        border-right: none;
+        border-top: 1px solid #1c1c1c;
+        max-height: 50vh;
+      }
+      .panel-right {
+        order: 1;                /* TYPE goes on top */
+        border-right: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="title">
+    Noise Font<br>
+    Variable Weight Axis
+  </div>
+
+  <div class="controls">
+    <div class="slider-row">
+      <span class="ax">0</span>
+      <input type="range" id="slider" min="0" max="1000" value="0">
+      <span class="ax">1000</span>
+      <span class="num" id="wnum">0</span>
+    </div>
+    <div class="btn-row">
+      <button id="playBtn">▶ Auto</button>
+      <div class="speed-row">
+        <span class="ax" style="opacity:.45">slow</span>
+        <input type="range" id="speed" min="1" max="10" value="4">
+        <span class="ax" style="opacity:.45">fast</span>
+      </div>
+      <span class="hint">drag the bar to decode</span>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="panel panel-left">
+    <div class="panel-title">Specimen</div>
+
+    <div class="spec-section">
+      <div class="sec-label">A — Z</div>
+      <div class="glyph-row" id="spec-az"></div>
+    </div>
+    <div class="spec-section">
+      <div class="sec-label">a — z</div>
+      <div class="glyph-row" id="spec-azl"></div>
+    </div>
+    <div class="spec-section">
+      <div class="sec-label">0 — 9</div>
+      <div class="glyph-row" id="spec-num"></div>
+    </div>
+    <div class="spec-section">
+      <div class="sec-label">Symbols</div>
+      <div class="glyph-row" id="spec-sym"></div>
+    </div>
+  </section>
+
+  <section class="panel panel-right">
+    <div class="panel-title">Type</div>
+    <textarea id="userInput" placeholder="Type anything...   move the slider to decode." maxlength="200">NOISE TYPE</textarea>
+    <div class="render-area" id="renderArea"></div>
+  </section>
+</main>
+
+<script>
+// ── Pixel / grid constants ────────────────────────────────────────────
+const PS         = 3;     // screen px per noise pixel
+const SPEC_COLS  = 14;    // specimen glyph: 14×19 noise grid → 42×57 px
+const SPEC_ROWS  = 19;
+const TYPE_COLS  = 22;    // input area glyph: 22×30 → 66×90 px
+const TYPE_ROWS  = 30;
+
+// Sine cycles across weight range — how many times each letter pixel flips
+// as weight goes 0→1. Higher = more motion = letter more visible while moving.
+const CYCLES = 8;
+
+// ── Seeded PRNG (mulberry32) ──────────────────────────────────────────
+// Math.random() would re-roll the noise on every page load — bad for a font.
+// We hash (char + size) into a 32-bit seed so every glyph has a stable,
+// deterministic noise pattern that survives reloads and is reproducible
+// when we export to a real font file later.
+function hashSeed(str) {
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+function mulberry32(seed) {
+  return function () {
+    seed = (seed + 0x6D2B79F5) >>> 0;
+    let t = seed;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return (((t ^ (t >>> 14)) >>> 0)) / 4294967296;
+  };
+}
+
+// ── GlyphPattern ──────────────────────────────────────────────────────
+//  Pure pixel data for a single character at a given grid size.
+//  Built once and cached, then rendered to any number of canvases.
+//
+//  Variable-font masters:
+//    Background pixels: fixed random value, same in both masters → static.
+//    Letter pixels:     oscillate via sin(CYCLES·2π·w + phase) → motion.
+//
+class GlyphPattern {
+  constructor(char, cols, rows) {
+    this.char = char;
+    this.cols = cols;
+    this.rows = rows;
+    this._build();
+  }
+
+  _mask() {
+    const W = this.cols * PS, H = this.rows * PS;
+    const off = document.createElement('canvas');
+    off.width = W; off.height = H;
+    const oc = off.getContext('2d');
+    oc.fillStyle = '#000';
+    oc.fillRect(0, 0, W, H);
+
+    // Heavy weight so small chars stay legible
+    const fs = H * 0.78;
+    oc.font = `900 ${fs}px 'Arial Black','Helvetica Neue',Arial,sans-serif`;
+    oc.textAlign = 'center';
+    oc.textBaseline = 'middle';
+    oc.fillStyle = '#fff';
+    oc.fillText(this.char, W / 2, H / 2 + H * 0.04);
+
+    const data = oc.getImageData(0, 0, W, H).data;
+    const m = new Uint8Array(this.cols * this.rows);
+    for (let r = 0; r < this.rows; r++) {
+      for (let c = 0; c < this.cols; c++) {
+        const sx = c * PS + 1, sy = r * PS + 1;
+        m[r * this.cols + c] = data[(sy * W + sx) * 4] > 100 ? 1 : 0;
+      }
+    }
+    return m;
+  }
+
+  _build() {
+    const mask = this._mask();
+    const N = this.cols * this.rows;
+
+    this.pxLetter = new Uint8Array(N);
+    this.pxBg     = new Uint8Array(N);
+    this.pxPhase  = new Float32Array(N);
+    this.pxBase   = new Uint8Array(N);
+
+    // Deterministic PRNG seeded from char + size.
+    // Same character at same size → same noise pattern, forever.
+    const rng = mulberry32(hashSeed(`${this.char}|${this.cols}x${this.rows}`));
+
+    for (let i = 0; i < N; i++) {
+      if (mask[i]) {
+        this.pxLetter[i] = 1;
+        this.pxPhase[i]  = rng() * Math.PI * 2;
+        this.pxBase[i]   = rng() < 0.5 ? 0 : 1;
+      } else {
+        this.pxBg[i] = rng() < 0.5 ? 0 : 1;
+      }
+    }
+  }
+}
+
+// ── Renderer ──────────────────────────────────────────────────────────
+function renderGlyph(ctx, pattern, weight) {
+  const { cols, rows, pxLetter, pxBg, pxPhase, pxBase } = pattern;
+  const W = cols * PS, H = rows * PS;
+  const img = ctx.createImageData(W, H);
+  const buf = img.data;
+
+  const TWO_PI_CYCLES = Math.PI * 2 * CYCLES;
+  const wAng = weight * TWO_PI_CYCLES;
+
+  for (let i = 0; i < cols * rows; i++) {
+    let val;
+    if (pxLetter[i]) {
+      const s = Math.sin(wAng + pxPhase[i]);
+      val = s > 0 ? pxBase[i] : 1 - pxBase[i];
+    } else {
+      val = pxBg[i];
+    }
+    const v = val === 0 ? 16 : 240;
+    const c = i % cols;
+    const r = (i / cols) | 0;
+    for (let dy = 0; dy < PS; dy++) {
+      for (let dx = 0; dx < PS; dx++) {
+        const idx = ((r * PS + dy) * W + (c * PS + dx)) * 4;
+        buf[idx] = buf[idx+1] = buf[idx+2] = v;
+        buf[idx+3] = 255;
+      }
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+}
+
+// ── Pattern cache ─────────────────────────────────────────────────────
+//  Keyed by `${char}|${cols}x${rows}` so spec & type sizes are separate.
+//  This guarantees the same character always uses the same noise pattern
+//  (consistency) while different sizes get their own builds.
+const patternCache = new Map();
+function getPattern(char, cols, rows) {
+  const key = `${char}|${cols}x${rows}`;
+  let p = patternCache.get(key);
+  if (!p) {
+    p = new GlyphPattern(char, cols, rows);
+    patternCache.set(key, p);
+  }
+  return p;
+}
+
+// ── Canvas registry ───────────────────────────────────────────────────
+//  Every rendered canvas in the page is registered here so we can
+//  redraw them all in one shot when the weight changes.
+const liveCanvases = [];   // [{ ctx, pattern, isType }]
+
+function renderAll(weight) {
+  for (const item of liveCanvases) {
+    renderGlyph(item.ctx, item.pattern, weight);
+  }
+}
+
+// ── Build specimen (left panel) ───────────────────────────────────────
+const CHARSET = {
+  az:  'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+  azl: 'abcdefghijklmnopqrstuvwxyz',
+  num: '0123456789',
+  sym: `!@#$%^&*()-_=+[]{}\\|;:'",.<>/?\`~`,
+};
+
+function buildSpec(chars, containerId) {
+  const container = document.getElementById(containerId);
+  for (const ch of chars) {
+    const cell = document.createElement('div');
+    cell.className = 'glyph-cell';
+
+    const canvas = document.createElement('canvas');
+    canvas.width  = SPEC_COLS * PS;
+    canvas.height = SPEC_ROWS * PS;
+    const ctx = canvas.getContext('2d');
+
+    const pattern = getPattern(ch, SPEC_COLS, SPEC_ROWS);
+    liveCanvases.push({ ctx, pattern, isType: false });
+
+    const label = document.createElement('span');
+    label.className = 'glyph-char';
+    label.textContent = ch;
+
+    cell.appendChild(canvas);
+    cell.appendChild(label);
+    container.appendChild(cell);
+  }
+}
+
+buildSpec(CHARSET.az,  'spec-az');
+buildSpec(CHARSET.azl, 'spec-azl');
+buildSpec(CHARSET.num, 'spec-num');
+buildSpec(CHARSET.sym, 'spec-sym');
+
+// ── Build / update typing area (right panel) ──────────────────────────
+const userInput = document.getElementById('userInput');
+const renderArea = document.getElementById('renderArea');
+
+function rebuildTypeArea() {
+  // Remove old type canvases from registry
+  for (let i = liveCanvases.length - 1; i >= 0; i--) {
+    if (liveCanvases[i].isType) liveCanvases.splice(i, 1);
+  }
+  renderArea.innerHTML = '';
+
+  const text = userInput.value;
+  const lines = text.split('\n');
+
+  // Render glyphs only for characters that have patterns (or build new).
+  // Unknown chars fall back to a space.
+  for (const line of lines) {
+    const lineEl = document.createElement('div');
+    lineEl.className = 'render-line';
+
+    for (const ch of line) {
+      if (ch === ' ') {
+        const sp = document.createElement('div');
+        sp.className = 'render-space';
+        sp.style.width = (TYPE_COLS * PS * 0.4) + 'px';
+        lineEl.appendChild(sp);
+        continue;
+      }
+
+      // Build cell with canvas
+      const cell = document.createElement('div');
+      cell.className = 'render-cell';
+      const canvas = document.createElement('canvas');
+      canvas.width  = TYPE_COLS * PS;
+      canvas.height = TYPE_ROWS * PS;
+      const ctx = canvas.getContext('2d');
+
+      const pattern = getPattern(ch, TYPE_COLS, TYPE_ROWS);
+      liveCanvases.push({ ctx, pattern, isType: true });
+
+      cell.appendChild(canvas);
+      lineEl.appendChild(cell);
+    }
+    renderArea.appendChild(lineEl);
+  }
+
+  renderAll(currentWeight);
+}
+
+let inputTimer = null;
+userInput.addEventListener('input', () => {
+  clearTimeout(inputTimer);
+  inputTimer = setTimeout(rebuildTypeArea, 120);
+});
+
+// ── Controls / animation loop ─────────────────────────────────────────
+const slider  = document.getElementById('slider');
+const wnumEl  = document.getElementById('wnum');
+const playBtn = document.getElementById('playBtn');
+const speedEl = document.getElementById('speed');
+
+let currentWeight = 0;
+let playing       = false;     // ← default OFF: user drives the slider
+let animDir       = 1;
+let lastFrame     = null;
+
+function loop(ts) {
+  if (playing) {
+    if (lastFrame !== null) {
+      const dt = (ts - lastFrame) / 1000;
+      const spd = parseInt(speedEl.value) / 10;   // 0.1 – 1.0 per sec
+      currentWeight += animDir * spd * dt;
+      if (currentWeight >= 1) { currentWeight = 1; animDir = -1; }
+      if (currentWeight <= 0) { currentWeight = 0; animDir =  1; }
+
+      slider.value = Math.round(currentWeight * 1000);
+      wnumEl.textContent = slider.value;
+      renderAll(currentWeight);
+    }
+    lastFrame = ts;
+  } else {
+    lastFrame = null;
+  }
+  requestAnimationFrame(loop);
+}
+
+slider.addEventListener('input', () => {
+  if (playing) {
+    playing = false;
+    playBtn.classList.remove('on');
+    playBtn.textContent = '▶ Auto';
+  }
+  currentWeight = parseInt(slider.value) / 1000;
+  wnumEl.textContent = slider.value;
+  renderAll(currentWeight);
+});
+
+playBtn.addEventListener('click', () => {
+  playing = !playing;
+  playBtn.classList.toggle('on', playing);
+  playBtn.textContent = playing ? '⏸ Auto' : '▶ Auto';
+});
+
+// ── Init ──────────────────────────────────────────────────────────────
+rebuildTypeArea();    // also calls renderAll(0)
+requestAnimationFrame(loop);
+</script>
+
+</body>
+</html>
