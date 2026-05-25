@@ -132,6 +132,11 @@
                  isResizing: false, draggingPointIdx: -1, dragOffset: {x:0, y:0}, points: [] };
     let box2 = { x: 0, y: -125, w: 400, h: 200, handleSize: 10,
                  isResizing: false, draggingPointIdx: -1, dragOffset: {x:0, y:0}, points: [] };
+    // 안쪽 모서리(seam) / 두 기준점의 월드 좌표 — 박스 크기에 관계없이 고정
+    const INNER_X       = 0;    // 두 박스가 만나는 세로 모서리 X
+    const BOX_BOTTOM_Y  = 100;  // 박스 바닥 (= 맨아래 기준점 Y)
+    const TOP_ANCHOR_Y  = 20;   // 맨위 기준점 Y
+    const ANCHOR_GAP    = BOX_BOTTOM_Y - TOP_ANCHOR_Y; // 두 기준점 사이 거리 (80)
     const Z_SCALE = 140;
     const Z_BRIGHT_MIN = 60;
     const Z_BRIGHT_MAX = 100;
@@ -220,14 +225,20 @@
       rotateX(cam.pitch);
       rotateY(cam.yaw);
 
-      // 박스 정렬(아래쪽 기준)
-      let totalW = box1.w + box2.w;
-      let maxH = Math.max(box1.h, box2.h);
-      let bottomY = maxH / 2;
-      box1.x = -totalW / 2;
-      box2.x = box1.x + box1.w;
-      box1.y = bottomY - box1.h;
-      box2.y = bottomY - box2.h;
+      // 박스 정렬 — 안쪽 모서리(seam) X=INNER_X, 바닥 Y=BOX_BOTTOM_Y 고정
+      // 박스를 리사이즈하면 바깥쪽 모서리만 움직이고 안쪽은 고정
+      box1.x = INNER_X - box1.w;
+      box2.x = INNER_X;
+      box1.y = BOX_BOTTOM_Y - box1.h;
+      box2.y = BOX_BOTTOM_Y - box2.h;
+
+      // 맨위 기준점(point 0)의 relY를 박스 높이에 맞춰 동적으로 갱신
+      // 월드 Y = box.y + relY*h = TOP_ANCHOR_Y 가 항상 성립하도록
+      for (const b of [box1, box2]) {
+        if (b.points.length > 0) {
+          b.points[0].relY = 1 - ANCHOR_GAP / b.h;
+        }
+      }
 
       // 1) 삼각형 면 — 선택된 블렌드 모드 적용
       blendMode(BLEND_MODES_LIST[blendModeIdx].getMode());
@@ -579,13 +590,13 @@
       if (box1.isResizing) {
         const sd = screenDeltaToBoxXY(mouseX - box1._anchor.mx0, mouseY - box1._anchor.my0);
         box1.w = constrain(box1._anchor.w - sd.dx, 50, 2000);
-        box1.h = constrain(box1._anchor.h - sd.dy, 50, 2000);
+        box1.h = constrain(box1._anchor.h - sd.dy, ANCHOR_GAP, 2000);
         return;
       }
       if (box2.isResizing) {
         const sd = screenDeltaToBoxXY(mouseX - box2._anchor.mx0, mouseY - box2._anchor.my0);
         box2.w = constrain(box2._anchor.w + sd.dx, 50, 2000);
-        box2.h = constrain(box2._anchor.h - sd.dy, 50, 2000);
+        box2.h = constrain(box2._anchor.h - sd.dy, ANCHOR_GAP, 2000);
         return;
       }
 
