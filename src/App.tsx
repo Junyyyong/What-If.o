@@ -130,7 +130,7 @@ function ArchivePage({ open, search, characters }: {
         <button className={`sort-btn${sort === 'alphabetical' ? ' on' : ''}`} onClick={() => setSort('alphabetical')}>
           A–Z
         </button>
-        <span>Archive</span>
+        <span>List</span>
         <button className={`sort-btn${sort === 'chronological' ? ' on' : ''}`} onClick={() => setSort('chronological')}>
           Year
         </button>
@@ -170,7 +170,7 @@ function PreviewPage({ open, search, characters }: {
     <Fade>
       <div className="content-header">
         <span className="sort-btn on">A–Z</span>
-        <span>Preview</span>
+        <span>Character</span>
         <span />
       </div>
       <div className="preview-grid">
@@ -357,14 +357,14 @@ export default function App() {
           onChange={e => setSearch(e.target.value)} />
       </div>
 
-      {/* Row 2: Archive */}
+      {/* Row 2: List (=Archive) */}
       <div className="nav-row">
-        <button className={`nav-btn${page === 'archive' ? ' active' : ''}`} onClick={() => setPage('archive')}>Archive</button>
+        <button className={`nav-btn${page === 'archive' ? ' active' : ''}`} onClick={() => setPage('archive')}>List</button>
       </div>
 
-      {/* Row 3: Preview */}
+      {/* Row 3: Character (=Preview) */}
       <div className="nav-row">
-        <button className={`nav-btn${page === 'preview' ? ' active' : ''}`} onClick={() => setPage('preview')}>Preview</button>
+        <button className={`nav-btn${page === 'preview' ? ' active' : ''}`} onClick={() => setPage('preview')}>Character</button>
       </div>
 
       {/* Row 4: Interaction */}
