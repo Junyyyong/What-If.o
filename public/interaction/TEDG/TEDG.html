@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>TEDG — 졸업식 아이덴티티</title>
+  <style>
+    html, body {
+      margin: 0; padding: 0; overflow: hidden; background: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", sans-serif;
+    }
+    canvas { display: block; }
+
+    #controls {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      background: transparent;
+      padding: 0;
+      color: #111;
+      display: flex;
+      align-items: flex-end;
+      gap: 14px;
+      border: none;
+    }
+    .year-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      align-items: flex-start;
+    }
+    .year-group label {
+      font-size: 10px;
+      opacity: 0.6;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-weight: 700;
+      padding-left: 2px;
+    }
+    #yearInput {
+      width: 72px;
+      padding: 8px 6px;
+      font-size: 16px;
+      font-weight: 600;
+      border: 1px solid #111;
+      background: #fff;
+      color: #111;
+      text-align: center;
+      outline: none;
+      font-variant-numeric: tabular-nums;
+    }
+    #yearInput:focus { background: #f4f4f4; }
+    .btn-group {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    #controls button {
+      appearance: none;
+      background: transparent;
+      border: 1px solid #111;
+      color: #111;
+      width: 34px;
+      height: 34px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      transition: background 0.12s, color 0.12s;
+    }
+    #controls button:hover { background: #f0f0f0; }
+    #controls button.active { background: #111; color: #fff; }
+    #controls button svg { width: 15px; height: 15px; display: block; }
+    #controls button.text-btn {
+      width: auto;
+      min-width: 56px;
+      padding: 0 10px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      font-family: inherit;
+    }
+
+    #hint {
+      position: fixed;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px;
+      opacity: 0.45;
+      color: #444;
+      letter-spacing: 0.02em;
+      z-index: 9;
+      white-space: nowrap;
+      pointer-events: none;
+      font-family: inherit;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.2/p5.min.js"></script>
+</head>
+<body>
+  <div id="controls">
+    <div class="year-group">
+      <label for="yearInput">GRADUATION</label>
+      <input type="number" id="yearInput" min="0" max="99" value="24" />
+    </div>
+    <div class="btn-group">
+      <button id="regenBtn" title="재생성">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 12a9 9 0 0 1 15-6.7L21 8"/>
+          <polyline points="21 3 21 8 16 8"/>
+          <path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
+          <polyline points="3 21 3 16 8 16"/>
+        </svg>
+      </button>
+      <button id="guidesBtn" class="active" title="가이드 표시 토글"></button>
+      <button id="blendBtn" class="text-btn" title="블렌드 모드 전환">BLEND</button>
+      <button id="resetCamBtn" title="2D 시점 복귀">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="4" width="16" height="16" rx="1.5"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+  <div id="hint">점 드래그: 위치 · Shift+드래그: 깊이 · 배경 드래그: 3D 회전</div>
+
+  <script>
+    // ---------- 상태 ----------
+    let box1 = { x: -400, y: -125, w: 400, h: 200, handleSize: 10,
+                 isResizing: false, draggingPointIdx: -1, dragOffset: {x:0, y:0}, points: [] };
+    let box2 = { x: 0, y: -125, w: 400, h: 200, handleSize: 10,
+                 isResizing: false, draggingPointIdx: -1, dragOffset: {x:0, y:0}, points: [] };
+    const Z_SCALE = 140;
+    const Z_BRIGHT_MIN = 60;
+    const Z_BRIGHT_MAX = 100;
+    let TRI_ALPHA = 0.6;
+
+    // 블렌드 모드 순환 (실제 p5 상수는 setup 이후에야 존재해서 getMode lazy 호출)
+    const BLEND_MODES_LIST = [
+      { label: 'BLEND', getMode: () => BLEND,      alpha: 0.6,  sat: [80, 100], bright: [70, 100] },
+      { label: 'DIFF',  getMode: () => DIFFERENCE, alpha: 1.0,  sat: [90, 100], bright: [80, 100] },
+      { label: 'HARD',  getMode: () => HARD_LIGHT, alpha: 0.85, sat: [85, 100], bright: [60,  92] },
+      { label: 'MULT',  getMode: () => MULTIPLY,   alpha: 0.85, sat: [70, 100], bright: [55,  92] },
+    ];
+    let blendModeIdx = 0;
+
+    let cam = { yaw: 0, pitch: 0, targetYaw: null, targetPitch: null, isDragging: false };
+    let showGuides = true;
+
+    // ---------- 아이콘 ----------
+    const ICON_EYE_ON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>`;
+    const ICON_EYE_OFF = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a19.77 19.77 0 0 1 4.22-5.06"/><path d="M22.54 12.88A19.5 19.5 0 0 0 23 12s-4-7-11-7a10.6 10.6 0 0 0-3.06.44"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4"/><line x1="2" y1="2" x2="22" y2="22"/></svg>`;
+
+    function updateGuideIcon() {
+      document.getElementById('guidesBtn').innerHTML = showGuides ? ICON_EYE_ON : ICON_EYE_OFF;
+    }
+
+    // ---------- p5 lifecycle ----------
+    function setup() {
+      createCanvas(windowWidth, windowHeight, WEBGL);
+      colorMode(HSB, 360, 100, 100, 1);
+      ortho(-windowWidth/2, windowWidth/2, -windowHeight/2, windowHeight/2, -3000, 3000);
+
+      document.getElementById('yearInput').addEventListener('input', applyYear);
+      document.getElementById('regenBtn').addEventListener('click', applyYear);
+      document.getElementById('guidesBtn').addEventListener('click', toggleGuides);
+      document.getElementById('blendBtn').addEventListener('click', cycleBlendMode);
+      document.getElementById('resetCamBtn').addEventListener('click', resetCamera);
+      updateGuideIcon();
+      // 초기 모드 라벨 동기화
+      document.getElementById('blendBtn').textContent = BLEND_MODES_LIST[blendModeIdx].label;
+      applyYear();
+    }
+
+    function windowResized() {
+      resizeCanvas(windowWidth, windowHeight);
+      ortho(-windowWidth/2, windowWidth/2, -windowHeight/2, windowHeight/2, -3000, 3000);
+    }
+
+    function toggleGuides() {
+      showGuides = !showGuides;
+      document.getElementById('guidesBtn').classList.toggle('active', showGuides);
+      updateGuideIcon();
+    }
+
+    function cycleBlendMode() {
+      blendModeIdx = (blendModeIdx + 1) % BLEND_MODES_LIST.length;
+      TRI_ALPHA = BLEND_MODES_LIST[blendModeIdx].alpha;
+      document.getElementById('blendBtn').textContent = BLEND_MODES_LIST[blendModeIdx].label;
+    }
+
+    function resetCamera() {
+      cam.targetYaw = 0;
+      cam.targetPitch = 0;
+    }
+
+    function isCameraRotated() {
+      return Math.abs(cam.yaw) > 0.001 || Math.abs(cam.pitch) > 0.001;
+    }
+
+    function draw() {
+      background(0, 0, 100); // 흰색
+
+      // 카메라 lerp 애니메이션
+      if (cam.targetYaw !== null) {
+        cam.yaw   = lerp(cam.yaw,   cam.targetYaw,   0.18);
+        cam.pitch = lerp(cam.pitch, cam.targetPitch, 0.18);
+        if (Math.abs(cam.yaw - cam.targetYaw) < 0.0008 &&
+            Math.abs(cam.pitch - cam.targetPitch) < 0.0008) {
+          cam.yaw = cam.targetYaw;
+          cam.pitch = cam.targetPitch;
+          cam.targetYaw = null;
+          cam.targetPitch = null;
+        }
+      }
+
+      push();
+      rotateX(cam.pitch);
+      rotateY(cam.yaw);
+
+      // 박스 정렬(아래쪽 기준)
+      let totalW = box1.w + box2.w;
+      let maxH = Math.max(box1.h, box2.h);
+      let bottomY = maxH / 2;
+      box1.x = -totalW / 2;
+      box2.x = box1.x + box1.w;
+      box1.y = bottomY - box1.h;
+      box2.y = bottomY - box2.h;
+
+      // 1) 삼각형 면 — 선택된 블렌드 모드 적용
+      blendMode(BLEND_MODES_LIST[blendModeIdx].getMode());
+      drawTriangles(box1);
+      drawTriangles(box2);
+      blendMode(BLEND); // 가이드는 일반 합성으로 복귀
+
+      // 2) 가이드 (3D 직육면체 + 연결선 + 점)
+      if (showGuides) {
+        drawBox3D(box1, color(320, 35, 65), 'left');
+        drawBox3D(box2, color(195, 35, 65), 'right');
+        drawPointMarkers(box1);
+        drawPointMarkers(box2);
+      }
+
+      // 3) 점/핸들 화면 좌표 캐싱
+      cachePickCoords();
+
+      pop();
+    }
+
+    // ---------- 입력 처리 ----------
+    function applyYear() {
+      let raw = document.getElementById('yearInput').value;
+      raw = String(raw).replace(/[^\d]/g, '');
+      if (raw === '') raw = '0';
+      let n = constrain(parseInt(raw, 10) || 0, 0, 99);
+      const padded = String(n).padStart(2, '0');
+      const d1 = parseInt(padded[0], 10);
+      const d2 = parseInt(padded[1], 10);
+      generateBoxPoints(box1, d1, true);
+      generateBoxPoints(box2, d2, false);
+    }
+
+    // 변 위 한 점
+    function pointOnSide(side, t) {
+      if (side === 'top')    return { relX: t, relY: 0 };
+      if (side === 'right')  return { relX: 1, relY: t };
+      if (side === 'bottom') return { relX: t, relY: 1 };
+      return                 { relX: 0, relY: t }; // left
+    }
+
+    // 기준점·끝점이 점유한 변은 중간 점에서 모두 제외 + 직전 변과 다른 변 선택
+    //   좌측 박스: 기준점=right, 끝점=right+bottom → 중간 점은 {top, left}만 가능
+    //   우측 박스: 기준점=left,  끝점=left+bottom  → 중간 점은 {top, right}만 가능
+    function generateBoxPoints(box, digit, isLeftBox) {
+      box.points = [];
+      const refSide = isLeftBox ? 'right' : 'left';
+      const refRelX = isLeftBox ? 1 : 0;
+      const reserved = new Set([refSide, 'bottom']);
+      const allowedSides = ['top', 'right', 'bottom', 'left'].filter(s => !reserved.has(s));
+
+      // 0번: 기준점 (박스 세로 중간보다 약간 아래)
+      box.points.push({ relX: refRelX, relY: 0.6, relZ: 0 });
+
+      // 1 ~ digit-1: allowedSides 안에서 직전 변과 다른 변 선택
+      let prevSide = null;
+      for (let i = 1; i < digit; i++) {
+        let pool = allowedSides.filter(s => s !== prevSide);
+        if (pool.length === 0) pool = allowedSides; // 안전 fallback
+        const side = pool[Math.floor(Math.random() * pool.length)];
+        const t = random(0.12, 0.88);
+        const pt = pointOnSide(side, t);
+        box.points.push({ relX: pt.relX, relY: pt.relY, relZ: random(-1, 1) });
+        prevSide = side;
+      }
+
+      // 마지막: 기준점 바로 아래 corner
+      if (digit >= 1) {
+        box.points.push({ relX: refRelX, relY: 1, relZ: 0 });
+      }
+    }
+
+    // ---------- 좌표/색상 ----------
+    function getPointAbs(box, pt) {
+      return {
+        x: box.x + pt.relX * box.w,
+        y: box.y + pt.relY * box.h,
+        z: (pt.relZ || 0) * Z_SCALE
+      };
+    }
+
+    function getPointColor(box, i) {
+      const p = box.points[i];
+      const mode = BLEND_MODES_LIST[blendModeIdx];
+      const brightnessVal = map(p.relZ || 0, -1, 1, mode.bright[0], mode.bright[1], true);
+      if (i === 0) {
+        // 기준점: 모드별로 적절한 옅은 톤
+        // DIFFERENCE는 검정(0,0,0)이 안전 (검정 - 흰배경 = 흰, 그대로 보임 → 결과 검정)
+        // BLEND는 흰색에 가깝게 (배경에 자연스럽게 녹음)
+        if (mode.label === 'DIFF')  return color(0, 0, 50, TRI_ALPHA);
+        if (mode.label === 'MULT')  return color(0, 0, 75, TRI_ALPHA);
+        if (mode.label === 'HARD')  return color(0, 0, 50, TRI_ALPHA);
+        return color(0, 0, 100, TRI_ALPHA * 0.4);
+      }
+      let pt = getPointAbs(box, p);
+      let prev, refVec;
+      if (i === 1) {
+        prev = getPointAbs(box, box.points[0]);
+        refVec = createVector(0, 1);
+      } else {
+        const refA = getPointAbs(box, box.points[i-2]);
+        const refB = getPointAbs(box, box.points[i-1]);
+        refVec = createVector(refB.x - refA.x, refB.y - refA.y);
+        prev = refB;
+      }
+      const curVec = createVector(pt.x - prev.x, pt.y - prev.y);
+      let diff = degrees(curVec.heading() - refVec.heading());
+      if (diff < 0) diff += 360;
+      const mirrored = diff > 180 ? 360 - diff : diff;
+      const len = curVec.mag();
+      const hueVal = (mirrored * 2) % 360;
+      const satVal = map(len, 0, box.w, mode.sat[0], mode.sat[1], true);
+      return color(hueVal, satVal, brightnessVal, TRI_ALPHA);
+    }
+
+    // 화면 픽셀 이동(dx, dy) → 박스 평면(XY) 이동 (역변환)
+    // 카메라가 rotateX(pitch) * rotateY(yaw) 순으로 적용되어, 박스 X·Y 단위벡터의 화면 투영은
+    //   X: (cos(yaw),               sin(yaw)*sin(pitch))
+    //   Y: (0,                      cos(pitch))
+    // 이를 dz=0 가정하에 2x2 역행렬로 풀어 박스 평면 이동을 구함.
+    function screenDeltaToBoxXY(dxScreen, dyScreen) {
+      const cy = Math.cos(cam.yaw),   sy = Math.sin(cam.yaw);
+      const cp = Math.cos(cam.pitch), sp = Math.sin(cam.pitch);
+      const det = cy * cp;
+      if (Math.abs(det) < 1e-4) return { dx: 0, dy: 0 };
+      const dxBox = (cp * dxScreen) / det;
+      const dyBox = (-sy * sp * dxScreen + cy * dyScreen) / det;
+      return { dx: dxBox, dy: dyBox };
+    }
+
+    // ---------- 투영 (window.screenX 충돌 회피용 자체 구현) ----------
+    function projectToScreen(x, y, z) {
+      const cy = Math.cos(cam.yaw),   sy = Math.sin(cam.yaw);
+      const cx = Math.cos(cam.pitch), sx = Math.sin(cam.pitch);
+      const x1 = x * cy + z * sy;
+      const y1 = y;
+      const z1 = -x * sy + z * cy;
+      const x2 = x1;
+      const y2 = y1 * cx - z1 * sx;
+      return { x: x2 + width / 2, y: y2 + height / 2 };
+    }
+
+    function cachePickCoords() {
+      for (const b of [box1, box2]) {
+        for (const p of b.points) {
+          const ap = getPointAbs(b, p);
+          const s = projectToScreen(ap.x, ap.y, ap.z);
+          p._sx = s.x; p._sy = s.y;
+        }
+      }
+      // 핸들은 직육면체 정면(z = +Z_SCALE) 좌상단 / 우상단
+      const h1 = projectToScreen(box1.x, box1.y, Z_SCALE);
+      box1._hsx = h1.x; box1._hsy = h1.y;
+      const h2 = projectToScreen(box2.x + box2.w, box2.y, Z_SCALE);
+      box2._hsx = h2.x; box2._hsy = h2.y;
+    }
+
+    // ---------- 렌더 ----------
+    function drawTriangles(box) {
+      if (box.points.length < 3) return;
+      noStroke();
+      for (let i = 0; i <= box.points.length - 3; i++) {
+        const p0 = getPointAbs(box, box.points[i]);
+        const p1 = getPointAbs(box, box.points[i+1]);
+        const p2 = getPointAbs(box, box.points[i+2]);
+        const c0 = getPointColor(box, i);
+        const c1 = getPointColor(box, i+1);
+        const c2 = getPointColor(box, i+2);
+        drawGradientTriangle(p0, p1, p2, c0, c1, c2);
+      }
+    }
+
+    function drawBox3D(box, boxColor, handlePos) {
+      noFill();
+      stroke(boxColor);
+      strokeWeight(0.6);
+      const d = Z_SCALE;
+      const x1 = box.x, y1 = box.y;
+      const x2 = box.x + box.w, y2 = box.y + box.h;
+
+      // 정면 사각형 (z = +d)
+      line(x1, y1, d, x2, y1, d);
+      line(x2, y1, d, x2, y2, d);
+      line(x2, y2, d, x1, y2, d);
+      line(x1, y2, d, x1, y1, d);
+      // 뒷면 사각형 (z = -d)
+      line(x1, y1, -d, x2, y1, -d);
+      line(x2, y1, -d, x2, y2, -d);
+      line(x2, y2, -d, x1, y2, -d);
+      line(x1, y2, -d, x1, y1, -d);
+      // 정면 ↔ 뒷면 연결 모서리 4개
+      line(x1, y1,  d, x1, y1, -d);
+      line(x2, y1,  d, x2, y1, -d);
+      line(x2, y2,  d, x2, y2, -d);
+      line(x1, y2,  d, x1, y2, -d);
+
+      // 핸들 (정면 좌상단 / 우상단) — 작은 정사각형
+      fill(boxColor);
+      noStroke();
+      const hx = (handlePos === 'left') ? x1 : x2;
+      const hs = box.handleSize;
+      push();
+      translate(hx, y1, d);
+      rect(-hs/2, -hs/2, hs, hs);
+      pop();
+    }
+
+    function drawPointMarkers(box) {
+      const lastIdx = box.points.length - 1;
+      const DOT_SIZE = 6;          // 시작·끝점 및 점선 원 (이전 8 * 0.7 ≈ 6)
+      const MID_SIZE = 4;          // 중간점 작게
+      const DRAG_SIZE = 12;        // 드래그 중 강조
+
+      // 1) 점선 — 시작점이 점선 첫 점, 끝점이 마지막. 총 5개 (시작점 + 사이 3 + 끝점)
+      if (lastIdx >= 1) {
+        const start = getPointAbs(box, box.points[0]);
+        const end = getPointAbs(box, box.points[lastIdx]);
+        const DOT_COUNT = 5;   // 시작점·끝점 포함 총 점 개수
+        const dx = (end.x - start.x) / (DOT_COUNT - 1);
+        const dy = (end.y - start.y) / (DOT_COUNT - 1);
+        const dz = (end.z - start.z) / (DOT_COUNT - 1);
+        noStroke();
+        fill(0);
+        // 시작점(0)과 끝점(DOT_COUNT-1)은 마커가 별도로 그리므로 사이 점만
+        for (let i = 1; i < DOT_COUNT - 1; i++) {
+          push();
+          translate(start.x + dx*i, start.y + dy*i, start.z + dz*i);
+          ellipse(0, 0, DOT_SIZE, DOT_SIZE);
+          pop();
+        }
+      }
+
+      // 2) 중간 점 연결선 (매우 옅게, 흐름 파악용)
+      stroke(0, 0, 0, 0.18);
+      strokeWeight(0.5);
+      noFill();
+      for (let i = 0; i < box.points.length - 1; i++) {
+        const a = getPointAbs(box, box.points[i]);
+        const b = getPointAbs(box, box.points[i+1]);
+        line(a.x, a.y, a.z, b.x, b.y, b.z);
+      }
+
+      // 3) 점 마커
+      for (let i = 0; i < box.points.length; i++) {
+        const pt = getPointAbs(box, box.points[i]);
+        push();
+        translate(pt.x, pt.y, pt.z);
+        noStroke();
+        if (i === 0 || i === lastIdx) {
+          // 시작점·끝점 — 같은 크기 검정
+          fill(0);
+          ellipse(0, 0, DOT_SIZE, DOT_SIZE);
+        } else if (box.draggingPointIdx === i) {
+          fill(0, 0, 0, 0.7);
+          ellipse(0, 0, DRAG_SIZE, DRAG_SIZE);
+        } else {
+          fill(0, 0, 0, 0.5);
+          ellipse(0, 0, MID_SIZE, MID_SIZE);
+        }
+        pop();
+      }
+    }
+
+    function drawGradientTriangle(p0, p1, p2, c0, c1, c2) {
+      beginShape(TRIANGLES);
+      fill(c0); vertex(p0.x, p0.y, p0.z);
+      fill(c1); vertex(p1.x, p1.y, p1.z);
+      fill(c2); vertex(p2.x, p2.y, p2.z);
+      endShape();
+    }
+
+    // ---------- 인터랙션 ----------
+    function isTypingInInput() {
+      const ae = document.activeElement;
+      return ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA');
+    }
+
+    function pickPoint(box) {
+      // 시작점(0)과 끝점(last)은 고정 — 픽킹 제외
+      for (let i = 1; i < box.points.length - 1; i++) {
+        const p = box.points[i];
+        if (p._sx !== undefined && dist(mouseX, mouseY, p._sx, p._sy) < 14) return i;
+      }
+      return -1;
+    }
+
+    function pickHandle(box) {
+      if (box._hsx === undefined) return false;
+      return dist(mouseX, mouseY, box._hsx, box._hsy) < box.handleSize;
+    }
+
+    function mousePressed() {
+      if (isTypingInInput()) return;
+
+      // 가이드 OFF면 카메라 조작만
+      if (!showGuides) {
+        cam.isDragging = true;
+        cam.targetYaw = null; cam.targetPitch = null;
+        return;
+      }
+      // 카메라 애니메이션 중이면 우선 취소하고 카메라 조작 시작 가능하게
+      if (cam.targetYaw !== null) {
+        cam.targetYaw = null; cam.targetPitch = null;
+      }
+
+      // 3D 모드에서도 점/핸들 픽킹 시도
+      const idx1 = pickPoint(box1);
+      if (idx1 >= 0) {
+        box1.draggingPointIdx = idx1;
+        const p = box1.points[idx1];
+        box1._dragAnchor = { relX: p.relX, relY: p.relY, mx0: mouseX, my0: mouseY };
+        return;
+      }
+      const idx2 = pickPoint(box2);
+      if (idx2 >= 0) {
+        box2.draggingPointIdx = idx2;
+        const p = box2.points[idx2];
+        box2._dragAnchor = { relX: p.relX, relY: p.relY, mx0: mouseX, my0: mouseY };
+        return;
+      }
+      if (pickHandle(box1)) {
+        box1.isResizing = true;
+        box1._anchor = { w: box1.w, h: box1.h, mx0: mouseX, my0: mouseY };
+        return;
+      }
+      if (pickHandle(box2)) {
+        box2.isResizing = true;
+        box2._anchor = { w: box2.w, h: box2.h, mx0: mouseX, my0: mouseY };
+        return;
+      }
+
+      // 배경 → 카메라 회전
+      cam.isDragging = true;
+    }
+
+    function mouseDragged() {
+      if (isTypingInInput()) return;
+
+      if (cam.isDragging) {
+        cam.targetYaw = null; cam.targetPitch = null;
+        cam.yaw   += (mouseX - pmouseX) * 0.008;
+        cam.pitch -= (mouseY - pmouseY) * 0.008;
+        cam.pitch = constrain(cam.pitch, -PI/2 + 0.1, PI/2 - 0.1);
+        return;
+      }
+
+      // 박스 리사이즈 — anchor + 화면→박스평면 역변환
+      if (box1.isResizing) {
+        const sd = screenDeltaToBoxXY(mouseX - box1._anchor.mx0, mouseY - box1._anchor.my0);
+        box1.w = constrain(box1._anchor.w - sd.dx, 50, 2000);
+        box1.h = constrain(box1._anchor.h - sd.dy, 50, 2000);
+        return;
+      }
+      if (box2.isResizing) {
+        const sd = screenDeltaToBoxXY(mouseX - box2._anchor.mx0, mouseY - box2._anchor.my0);
+        box2.w = constrain(box2._anchor.w + sd.dx, 50, 2000);
+        box2.h = constrain(box2._anchor.h - sd.dy, 50, 2000);
+        return;
+      }
+
+      // 점 드래그
+      const target = box1.draggingPointIdx >= 0 ? { box: box1, idx: box1.draggingPointIdx }
+                  : box2.draggingPointIdx >= 0 ? { box: box2, idx: box2.draggingPointIdx }
+                  : null;
+      if (!target) return;
+      const pRef = target.box.points[target.idx];
+      const shiftHeld = keyIsDown(SHIFT);
+
+      if (shiftHeld) {
+        const dy = pmouseY - mouseY;
+        pRef.relZ = constrain((pRef.relZ || 0) + dy * 0.008, -1, 1);
+      } else {
+        const anchor = target.box._dragAnchor;
+        const sd = screenDeltaToBoxXY(mouseX - anchor.mx0, mouseY - anchor.my0);
+        pRef.relX = constrain(anchor.relX + sd.dx / target.box.w, 0, 1);
+        pRef.relY = constrain(anchor.relY + sd.dy / target.box.h, 0, 1);
+      }
+    }
+
+    function mouseReleased() {
+      cam.isDragging = false;
+      box1.isResizing = false;
+      box2.isResizing = false;
+      box1.draggingPointIdx = -1;
+      box2.draggingPointIdx = -1;
+    }
+  </script>
+</body>
+</html>
