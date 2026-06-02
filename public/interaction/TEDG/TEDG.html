@@ -240,10 +240,10 @@
         }
       }
 
-      // 1) 삼각형 면 — 선택된 블렌드 모드 적용
+      // 1) 점-점 그라데이션 선 — 선택된 블렌드 모드 적용
       blendMode(BLEND_MODES_LIST[blendModeIdx].getMode());
-      drawTriangles(box1);
-      drawTriangles(box2);
+      drawGradientLines(box1);
+      drawGradientLines(box2);
       blendMode(BLEND); // 가이드는 일반 합성으로 복귀
 
       // 2) 가이드 (3D 직육면체 + 연결선 + 점)
@@ -398,17 +398,27 @@
     }
 
     // ---------- 렌더 ----------
-    function drawTriangles(box) {
-      if (box.points.length < 3) return;
-      noStroke();
-      for (let i = 0; i <= box.points.length - 3; i++) {
-        const p0 = getPointAbs(box, box.points[i]);
-        const p1 = getPointAbs(box, box.points[i+1]);
-        const p2 = getPointAbs(box, box.points[i+2]);
-        const c0 = getPointColor(box, i);
-        const c1 = getPointColor(box, i+1);
-        const c2 = getPointColor(box, i+2);
-        drawGradientTriangle(p0, p1, p2, c0, c1, c2);
+    // 점→점 사이를 잘게 쪼개 stroke 색을 보간 — 그라데이션 라인
+    function drawGradientLines(box) {
+      if (box.points.length < 2) return;
+      noFill();
+      strokeWeight(3);
+      const SEG = 40; // 한 선분을 40조각으로 쪼개 색 보간
+      for (let i = 0; i < box.points.length - 1; i++) {
+        const a  = getPointAbs(box, box.points[i]);
+        const b  = getPointAbs(box, box.points[i+1]);
+        const ca = getPointColor(box, i);
+        const cb = getPointColor(box, i+1);
+        for (let s = 0; s < SEG; s++) {
+          const t0 = s / SEG;
+          const t1 = (s + 1) / SEG;
+          const tm = (t0 + t1) / 2;
+          stroke(lerpColor(ca, cb, tm));
+          line(
+            lerp(a.x, b.x, t0), lerp(a.y, b.y, t0), lerp(a.z, b.z, t0),
+            lerp(a.x, b.x, t1), lerp(a.y, b.y, t1), lerp(a.z, b.z, t1)
+          );
+        }
       }
     }
 
