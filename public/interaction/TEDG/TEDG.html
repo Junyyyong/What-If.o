@@ -148,6 +148,7 @@
       { label: 'DIFF',  getMode: () => DIFFERENCE, alpha: 1.0,  sat: [90, 100], bright: [80, 100] },
       { label: 'HARD',  getMode: () => HARD_LIGHT, alpha: 0.85, sat: [85, 100], bright: [60,  92] },
       { label: 'MULT',  getMode: () => MULTIPLY,   alpha: 0.85, sat: [70, 100], bright: [55,  92] },
+      { label: 'NONE',  getMode: () => BLEND,      alpha: 1.0,  sat: [85, 100], bright: [70, 100] },
     ];
     let blendModeIdx = 0;
 
@@ -399,37 +400,75 @@
 
     // ---------- 렌더 ----------
     // 점→점 사이를 TRIANGLE_STRIP 리본으로 그려 GPU가 색을 보간 (부드러운 그라데이션)
+    // 인접한 두 선분은 점에서 같은 가장자리를 공유하도록 miter join 적용 → 꼭짓점에서 끊김 없음
     const LINE_HALF_WIDTH = 2.5; // 리본 반폭 (= strokeWeight 5와 동일한 굵기)
     function drawGradientLines(box) {
-      if (box.points.length < 2) return;
+      const n = box.points.length;
+      if (n < 2) return;
       noStroke();
+
       // 카메라를 향하는 월드 방향 V — 리본이 항상 카메라를 정면으로 향하도록 (billboard)
       const cy = Math.cos(cam.yaw),   sy = Math.sin(cam.yaw);
       const cp = Math.cos(cam.pitch), sp = Math.sin(cam.pitch);
       const Vx = -sy * cp, Vy = sp, Vz = cy * cp;
 
-      for (let i = 0; i < box.points.length - 1; i++) {
-        const a  = getPointAbs(box, box.points[i]);
-        const b  = getPointAbs(box, box.points[i+1]);
-        const ca = getPointColor(box, i);
-        const cb = getPointColor(box, i+1);
-
-        // 선 방향 L, 카메라 수직 평면 위의 perpendicular = cross(L, V)
-        const Lx = b.x - a.x, Ly = b.y - a.y, Lz = b.z - a.z;
+      // 1) 점 좌표, 색, 선분별 perpendicular(단위벡터) 미리 계산
+      const pts = new Array(n);
+      const cols = new Array(n);
+      for (let i = 0; i < n; i++) {
+        pts[i]  = getPointAbs(box, box.points[i]);
+        cols[i] = getPointColor(box, i);
+      }
+      const segPerp = new Array(n - 1); // 선분 i ~ i+1 의 단위 수직벡터
+      for (let i = 0; i < n - 1; i++) {
+        const Lx = pts[i+1].x - pts[i].x;
+        const Ly = pts[i+1].y - pts[i].y;
+        const Lz = pts[i+1].z - pts[i].z;
         const Px = Ly * Vz - Lz * Vy;
         const Py = Lz * Vx - Lx * Vz;
         const Pz = Lx * Vy - Ly * Vx;
         const Plen = Math.sqrt(Px*Px + Py*Py + Pz*Pz);
-        if (Plen < 1e-6) continue;
-        const ox = Px / Plen * LINE_HALF_WIDTH;
-        const oy = Py / Plen * LINE_HALF_WIDTH;
-        const oz = Pz / Plen * LINE_HALF_WIDTH;
+        segPerp[i] = Plen < 1e-6 ? null : { x: Px/Plen, y: Py/Plen, z: Pz/Plen };
+      }
+
+      // 2) 점마다 joint perpendicular = 양쪽 선분 수직의 합 정규화 (양 끝점은 그대로)
+      //    miter scale = 1 / cos(half-angle) 로 두께를 보정. 너무 뾰족한 각도는 clamp.
+      const jointPerp = new Array(n);
+      for (let i = 0; i < n; i++) {
+        const pPrev = i > 0     ? segPerp[i-1] : null;
+        const pNext = i < n - 1 ? segPerp[i]   : null;
+        if (!pPrev) { jointPerp[i] = pNext ? { x: pNext.x, y: pNext.y, z: pNext.z, s: 1 } : null; continue; }
+        if (!pNext) { jointPerp[i] = pPrev ? { x: pPrev.x, y: pPrev.y, z: pPrev.z, s: 1 } : null; continue; }
+        const sx = pPrev.x + pNext.x;
+        const sy_= pPrev.y + pNext.y;
+        const sz = pPrev.z + pNext.z;
+        const slen = Math.sqrt(sx*sx + sy_*sy_ + sz*sz);
+        if (slen < 1e-6) { jointPerp[i] = { x: pNext.x, y: pNext.y, z: pNext.z, s: 1 }; continue; }
+        const nx = sx / slen, ny = sy_ / slen, nz = sz / slen;
+        const dot = nx*pPrev.x + ny*pPrev.y + nz*pPrev.z; // cos(half-angle)
+        const miter = Math.min(1 / Math.max(dot, 0.25), 4); // 끝이 뾰족한 각 보호용 clamp
+        jointPerp[i] = { x: nx, y: ny, z: nz, s: miter };
+      }
+
+      // 3) 리본 그리기 — 각 선분이 양 끝의 joint perpendicular 사용
+      for (let i = 0; i < n - 1; i++) {
+        const a = pts[i],   b = pts[i+1];
+        const ca = cols[i], cb = cols[i+1];
+        const pa = jointPerp[i], pb = jointPerp[i+1];
+        if (!pa || !pb) continue;
+
+        const oax = pa.x * pa.s * LINE_HALF_WIDTH;
+        const oay = pa.y * pa.s * LINE_HALF_WIDTH;
+        const oaz = pa.z * pa.s * LINE_HALF_WIDTH;
+        const obx = pb.x * pb.s * LINE_HALF_WIDTH;
+        const oby = pb.y * pb.s * LINE_HALF_WIDTH;
+        const obz = pb.z * pb.s * LINE_HALF_WIDTH;
 
         beginShape(TRIANGLE_STRIP);
-        fill(ca); vertex(a.x + ox, a.y + oy, a.z + oz);
-        fill(ca); vertex(a.x - ox, a.y - oy, a.z - oz);
-        fill(cb); vertex(b.x + ox, b.y + oy, b.z + oz);
-        fill(cb); vertex(b.x - ox, b.y - oy, b.z - oz);
+        fill(ca); vertex(a.x + oax, a.y + oay, a.z + oaz);
+        fill(ca); vertex(a.x - oax, a.y - oay, a.z - oaz);
+        fill(cb); vertex(b.x + obx, b.y + oby, b.z + obz);
+        fill(cb); vertex(b.x - obx, b.y - oby, b.z - obz);
         endShape();
       }
     }
