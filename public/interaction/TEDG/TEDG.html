@@ -398,27 +398,39 @@
     }
 
     // ---------- 렌더 ----------
-    // 점→점 사이를 잘게 쪼개 stroke 색을 보간 — 그라데이션 라인
+    // 점→점 사이를 TRIANGLE_STRIP 리본으로 그려 GPU가 색을 보간 (부드러운 그라데이션)
+    const LINE_HALF_WIDTH = 2.5; // 리본 반폭 (= strokeWeight 5와 동일한 굵기)
     function drawGradientLines(box) {
       if (box.points.length < 2) return;
-      noFill();
-      strokeWeight(3);
-      const SEG = 40; // 한 선분을 40조각으로 쪼개 색 보간
+      noStroke();
+      // 카메라를 향하는 월드 방향 V — 리본이 항상 카메라를 정면으로 향하도록 (billboard)
+      const cy = Math.cos(cam.yaw),   sy = Math.sin(cam.yaw);
+      const cp = Math.cos(cam.pitch), sp = Math.sin(cam.pitch);
+      const Vx = -sy * cp, Vy = sp, Vz = cy * cp;
+
       for (let i = 0; i < box.points.length - 1; i++) {
         const a  = getPointAbs(box, box.points[i]);
         const b  = getPointAbs(box, box.points[i+1]);
         const ca = getPointColor(box, i);
         const cb = getPointColor(box, i+1);
-        for (let s = 0; s < SEG; s++) {
-          const t0 = s / SEG;
-          const t1 = (s + 1) / SEG;
-          const tm = (t0 + t1) / 2;
-          stroke(lerpColor(ca, cb, tm));
-          line(
-            lerp(a.x, b.x, t0), lerp(a.y, b.y, t0), lerp(a.z, b.z, t0),
-            lerp(a.x, b.x, t1), lerp(a.y, b.y, t1), lerp(a.z, b.z, t1)
-          );
-        }
+
+        // 선 방향 L, 카메라 수직 평면 위의 perpendicular = cross(L, V)
+        const Lx = b.x - a.x, Ly = b.y - a.y, Lz = b.z - a.z;
+        const Px = Ly * Vz - Lz * Vy;
+        const Py = Lz * Vx - Lx * Vz;
+        const Pz = Lx * Vy - Ly * Vx;
+        const Plen = Math.sqrt(Px*Px + Py*Py + Pz*Pz);
+        if (Plen < 1e-6) continue;
+        const ox = Px / Plen * LINE_HALF_WIDTH;
+        const oy = Py / Plen * LINE_HALF_WIDTH;
+        const oz = Pz / Plen * LINE_HALF_WIDTH;
+
+        beginShape(TRIANGLE_STRIP);
+        fill(ca); vertex(a.x + ox, a.y + oy, a.z + oz);
+        fill(ca); vertex(a.x - ox, a.y - oy, a.z - oz);
+        fill(cb); vertex(b.x + ox, b.y + oy, b.z + oz);
+        fill(cb); vertex(b.x - ox, b.y - oy, b.z - oz);
+        endShape();
       }
     }
 
