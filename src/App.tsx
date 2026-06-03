@@ -59,6 +59,30 @@ function useCharacters(): Character[] {
 type Page = 'archive' | 'preview' | 'interaction' | 'font' | 'about' | 'contact';
 type Sort  = 'alphabetical' | 'chronological';
 
+// ─── 해시 라우팅 ───────────────────────────────────────────────────────────────
+// archive ↔ /list (사용자 화면명이 List라서 URL도 list로 통일)
+// preview ↔ /character
+const PAGE_TO_URL: Record<Page, string> = {
+  archive: 'list', preview: 'character', interaction: 'interaction',
+  font: 'font', about: 'about', contact: 'contact',
+};
+const URL_TO_PAGE: Record<string, Page> = {
+  '': 'archive', list: 'archive', character: 'preview',
+  interaction: 'interaction', font: 'font', about: 'about', contact: 'contact',
+};
+
+function parseHash(): { page: Page; sub: string } {
+  const h = window.location.hash.replace(/^#\/?/, '');
+  const [p, sub] = h.split('/');
+  return { page: URL_TO_PAGE[p?.toLowerCase()] || 'archive', sub: sub || '' };
+}
+
+function buildHash(page: Page, sub?: string): string {
+  if (page === 'archive' && !sub) return '#/';
+  const urlPage = PAGE_TO_URL[page];
+  return sub ? `#/${urlPage}/${sub}` : `#/${urlPage}`;
+}
+
 function handleClick(char: Character, open: (s: string) => void) {
   if (char.sheet) open(char.sheet);
   else if (char.url) window.open(char.url, '_blank', 'noopener,noreferrer');
@@ -198,11 +222,14 @@ const AX_BASE_W = 1600;
 const AX_BASE_H = Math.round(AX_BASE_W * 9 / 16);
 
 // ─── Interaction ──────────────────────────────────────────────────────────────
-function InteractionPage() {
-  const [active, setActive] = useState<string | null>(null);
+function InteractionPage({ activeId, setActiveId }: {
+  activeId: string; setActiveId: (id: string) => void;
+}) {
   const embedRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
   const ax = interactions.find(i => i.id === 'AX')!;
+  // 대소문자 무시하고 id 매칭
+  const activeItem = interactions.find(i => i.id.toLowerCase() === activeId.toLowerCase());
 
   useEffect(() => {
     const update = () => {
@@ -242,7 +269,7 @@ function InteractionPage() {
       <div className="archive-cols">
         {interactions.map(item => (
           <div key={item.id} className="arc-entry clickable"
-            onClick={() => setActive(item.path)}>
+            onClick={() => setActiveId(item.id)}>
             <span>{item.title}</span>
             <span className="arc-year">{item.year}</span>
           </div>
@@ -250,12 +277,12 @@ function InteractionPage() {
       </div>
 
       <AnimatePresence>
-        {active && (
+        {activeItem && (
           <motion.div className="ix-backdrop"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}>
-            <iframe src={active} className="ix-frame" title="interaction" />
-            <button className="ix-close" onClick={() => setActive(null)}>✕</button>
+            <iframe src={activeItem.path} className="ix-frame" title={activeItem.title} />
+            <button className="ix-close" onClick={() => setActiveId('')}>✕</button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -342,10 +369,40 @@ function ContactPage() {
 
 // ─── App ──────────────────────────────────────────────────────────────────────
 export default function App() {
-  const [page, setPage]     = useState<Page>('archive');
-  const [search, setSearch] = useState('');
-  const [lbSrc, setLbSrc]   = useState<string | null>(null);
+  // 초기 상태는 현재 해시에서 파싱
+  const initial = parseHash();
+  const [page, setPage]                 = useState<Page>(initial.page);
+  const [interactionId, setInteractionId] = useState<string>(initial.sub);
+  const [search, setSearch]             = useState('');
+  const [lbSrc, setLbSrc]               = useState<string | null>(null);
   const characters = useCharacters();
+
+  // URL 해시 ← 상태 (페이지 또는 인터랙션 슬러그 변경 시 URL 업데이트)
+  useEffect(() => {
+    const sub = page === 'interaction' ? interactionId : '';
+    const newHash = buildHash(page, sub);
+    // 깨끗한 URL(해시 없음) 상태에서 default 페이지면 '#/' 추가 생략
+    if (newHash === '#/' && window.location.hash === '') return;
+    if (window.location.hash !== newHash) {
+      window.location.hash = newHash;
+    }
+  }, [page, interactionId]);
+
+  // URL 해시 → 상태 (뒤로 가기/직접 입력 대응)
+  useEffect(() => {
+    const onHashChange = () => {
+      const { page: p, sub } = parseHash();
+      setPage(p);
+      setInteractionId(sub);
+    };
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
+
+  // 페이지 전환 시 인터랙션 슬러그 자동 초기화 (interaction 페이지 떠나면 비움)
+  useEffect(() => {
+    if (page !== 'interaction' && interactionId) setInteractionId('');
+  }, [page]);
 
   return (
     <div className="app">
@@ -392,7 +449,7 @@ export default function App() {
         <AnimatePresence mode="wait">
           {page === 'archive'     && <ArchivePage     key="archive"     open={setLbSrc} search={search} characters={characters} />}
           {page === 'preview'     && <PreviewPage     key="preview"     open={setLbSrc} search={search} characters={characters} />}
-          {page === 'interaction' && <InteractionPage key="interaction" />}
+          {page === 'interaction' && <InteractionPage key="interaction" activeId={interactionId} setActiveId={setInteractionId} />}
           {page === 'font'        && <FontPage        key="font" />}
           {page === 'about'       && <AboutPage       key="about" count={characters.length} />}
           {page === 'contact'     && <ContactPage     key="contact" />}
