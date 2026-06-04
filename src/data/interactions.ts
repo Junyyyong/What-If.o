@@ -15,4 +15,5 @@ export const interactions: Interaction[] = [
   { id: 'openresearchstudio', title: 'OPENRESEARCHSTUDIO', path: '/interaction/openresearchstudio/dist/index.html',        year: 2026 },
   { id: 'noisetype',          title: 'NOISE TYPE',         path: '/interaction/NoiseType/index.html',                     year: 2026 },
   { id: 'tedg',               title: 'TEDG',               path: '/interaction/TEDG/TEDG.html',                           year: 2025 },
+  { id: 'tapeetepee',          title: 'TapeeTepee',         path: '/interaction/TapeeTepee/TapeeTepee.html',               year: 2026 },
 ];
