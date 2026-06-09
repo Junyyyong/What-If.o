@@ -325,34 +325,23 @@ button, select, input {
 }
 .ix-close:hover { opacity: 1; }
 
-/* ─── Character detail (link 이미지 풀스크린 스크롤) ───────────── */
-.char-detail {
-  position: fixed;
-  inset: 0;
-  background: #fff;
-  z-index: 9000;
-  overflow-y: auto;
+/* ─── Character detail (인라인 - nav 아래) ────────────────────── */
+.char-detail-wrap {
+  padding-top: 12px;
+  display: flex;
+  justify-content: center;
 }
 .char-detail-img {
   display: block;
   width: 100%;
   max-width: 1200px;
-  margin: 0 auto;
+  height: auto;
 }
-.char-detail-close {
-  position: fixed;
-  top: 16px;
-  left: 20px;
-  background: none;
-  border: none;
-  color: #000;
-  font-size: 18px;
+.cd-back {
   cursor: pointer;
-  opacity: .8;
-  z-index: 9001;
-  mix-blend-mode: difference;
+  text-decoration: underline;
 }
-.char-detail-close:hover { opacity: 1; }
+.cd-back:hover { opacity: 0.7; }
 
 /* ─── Lightbox ───────────────────────────────────────────────── */
 .lb-backdrop {

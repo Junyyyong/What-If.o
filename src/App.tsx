@@ -220,6 +220,22 @@ function PreviewPage({ openChar, search, characters }: {
 const AX_BASE_W = 1600;
 const AX_BASE_H = Math.round(AX_BASE_W * 9 / 16);
 
+// ─── Character Detail ───────────────────────────────────────────────────────
+function CharacterDetailPage({ char, onClose }: { char: Character; onClose: () => void }) {
+  return (
+    <Fade>
+      <div className="content-header">
+        <button className="sort-btn on cd-back" onClick={onClose}>← back</button>
+        <span>{char.creator}, 〈{char.name}〉, {char.year}</span>
+        <span />
+      </div>
+      <div className="char-detail-wrap">
+        {char.detail && <img src={char.detail} className="char-detail-img" alt={char.name} />}
+      </div>
+    </Fade>
+  );
+}
+
 // ─── Interaction ──────────────────────────────────────────────────────────────
 function InteractionPage({ activeId, setActiveId }: {
   activeId: string; setActiveId: (id: string) => void;
@@ -461,7 +477,9 @@ export default function App() {
       <main className="main">
         <AnimatePresence mode="wait">
           {page === 'archive'     && <ArchivePage     key="archive"     openChar={openChar} search={search} characters={characters} />}
-          {page === 'preview'     && <PreviewPage     key="preview"     openChar={openChar} search={search} characters={characters} />}
+          {page === 'preview' && (activeChar?.detail
+            ? <CharacterDetailPage key={`detail-${activeChar.name}`} char={activeChar} onClose={() => setCharacterId('')} />
+            : <PreviewPage     key="preview"     openChar={openChar} search={search} characters={characters} />)}
           {page === 'interaction' && <InteractionPage key="interaction" activeId={interactionId} setActiveId={setInteractionId} />}
           {page === 'font'        && <FontPage        key="font" />}
           {page === 'about'       && <AboutPage       key="about" count={characters.length} />}
@@ -471,18 +489,6 @@ export default function App() {
 
       <AnimatePresence>
         {lbSrc && <Lightbox src={lbSrc} onClose={() => setLbSrc(null)} />}
-      </AnimatePresence>
-
-      {/* 캐릭터 상세 페이지 (link 폴더 이미지) */}
-      <AnimatePresence>
-        {activeChar?.detail && (
-          <motion.div className="char-detail"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}>
-            <img src={activeChar.detail} className="char-detail-img" alt={activeChar.name} />
-            <button className="char-detail-close" onClick={() => setCharacterId('')}>✕</button>
-          </motion.div>
-        )}
       </AnimatePresence>
     </div>
   );
