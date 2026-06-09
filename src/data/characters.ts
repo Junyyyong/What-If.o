@@ -9,6 +9,7 @@ export interface Character {
   thumbnail?: string;   // preview 그리드 이미지
   sheet?: string;       // 라이트박스 풀이미지
   url?: string;         // 외부 창작자 링크
+  detail?: string;      // 상세페이지 이미지 (link 폴더)
 }
 
 export const characters: Character[] = [
@@ -35,5 +36,6 @@ export const characters: Character[] = [
   { id: 'WI-010', name: 'Woo-Tang', category: 'Neutral', year: 2025, creator: 'Sung',   placeholder: false, thumbnail: '/characters/Woo-Tang_Sung_2025.png' },
   { id: 'WI-011', name: 'Mongsille', category: 'Neutral', year: 2025, creator: 'Hanzhang', placeholder: false, thumbnail: '/characters/Mongsille_Hanzhang_2025.png', url: 'https://www.instagram.com/mongsilee_2025?igsh=MXBlaG54ejIwMDVvdw==' },
   { id: 'WI-012', name: 'Haoyu', category: 'Neutral', year: 2025, creator: 'Puffa', placeholder: false, thumbnail: '/characters/haoyu_puffa_2025.jpg' },
-  { id: 'WI-013', name: 'Bloop', category: 'Neutral', year: 2026, creator: 'Dongho', placeholder: false, thumbnail: '/characters/Bloop_Dongho_2026.png' },
+  { id: 'WI-013', name: 'Bloop',   category: 'Neutral', year: 2026, creator: 'Dongho',     placeholder: false, thumbnail: '/characters/Bloop_Dongho_2026.png',    detail: '/characters/link/link_Bloop_Dongho_2026.png' },
+  { id: 'WI-014', name: 'Mossibi', category: 'Neutral', year: 2026, creator: 'leeyoonseo', placeholder: false, thumbnail: '/characters/Mossibi_leeyoonseo_2026.png', detail: '/characters/link/link_Mossibi_leeyoonseo_2026.png' },
 ];

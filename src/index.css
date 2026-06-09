@@ -55,6 +55,16 @@
   font-weight: normal; font-style: normal;
 }
 @font-face {
+  font-family: 'Mossibi';
+  src: url('/fonts/Mossibi.otf') format('opentype');
+  font-weight: normal; font-style: normal;
+}
+@font-face {
+  font-family: 'Bloop';
+  src: url('/fonts/BLOOP.otf') format('opentype');
+  font-weight: normal; font-style: normal;
+}
+@font-face {
   font-family: 'PoEmoji';
   src: url('/fonts/POEMOJI.ttf') format('truetype');
   font-weight: normal; font-style: normal;
@@ -314,6 +324,35 @@ button, select, input {
   mix-blend-mode: difference;
 }
 .ix-close:hover { opacity: 1; }
+
+/* ─── Character detail (link 이미지 풀스크린 스크롤) ───────────── */
+.char-detail {
+  position: fixed;
+  inset: 0;
+  background: #fff;
+  z-index: 9000;
+  overflow-y: auto;
+}
+.char-detail-img {
+  display: block;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.char-detail-close {
+  position: fixed;
+  top: 16px;
+  left: 20px;
+  background: none;
+  border: none;
+  color: #000;
+  font-size: 18px;
+  cursor: pointer;
+  opacity: .8;
+  z-index: 9001;
+  mix-blend-mode: difference;
+}
+.char-detail-close:hover { opacity: 1; }
 
 /* ─── Lightbox ───────────────────────────────────────────────── */
 .lb-backdrop {

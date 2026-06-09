@@ -83,9 +83,8 @@ function buildHash(page: Page, sub?: string): string {
   return sub ? `#/${urlPage}/${sub}` : `#/${urlPage}`;
 }
 
-function handleClick(char: Character, open: (s: string) => void) {
-  if (char.sheet) open(char.sheet);
-  else if (char.url) window.open(char.url, '_blank', 'noopener,noreferrer');
+function isClickable(c: Character) {
+  return !!(c.detail || c.sheet || c.url);
 }
 
 // ─── Lightbox ─────────────────────────────────────────────────────────────────
@@ -121,8 +120,8 @@ function Fade({ children }: { children: React.ReactNode }) {
 }
 
 // ─── Archive ──────────────────────────────────────────────────────────────────
-function ArchivePage({ open, search, characters }: {
-  open: (s: string) => void; search: string; characters: Character[];
+function ArchivePage({ openChar, search, characters }: {
+  openChar: (c: Character) => void; search: string; characters: Character[];
 }) {
   const [sort, setSort] = useState<Sort>('alphabetical');
 
@@ -161,10 +160,10 @@ function ArchivePage({ open, search, characters }: {
       </div>
       <div className="archive-cols">
         {list.map(char => {
-          const clickable = !!(char.sheet || char.url);
+          const clickable = isClickable(char);
           return (
             <div key={char.id} className={`arc-entry${clickable ? ' clickable' : ''}`}
-              onClick={() => clickable && handleClick(char, open)}>
+              onClick={() => clickable && openChar(char)}>
               <span className={char.placeholder ? 'strike' : ''}>{char.name}</span>
               <span className="arc-creator">{char.creator}</span>
               <span className="arc-year">{char.year}</span>
@@ -177,8 +176,8 @@ function ArchivePage({ open, search, characters }: {
 }
 
 // ─── Preview ──────────────────────────────────────────────────────────────────
-function PreviewPage({ open, search, characters }: {
-  open: (s: string) => void; search: string; characters: Character[];
+function PreviewPage({ openChar, search, characters }: {
+  openChar: (c: Character) => void; search: string; characters: Character[];
 }) {
   const list = useMemo(() => {
     let arr = [...characters];
@@ -199,11 +198,11 @@ function PreviewPage({ open, search, characters }: {
       </div>
       <div className="preview-grid">
         {list.map(char => {
-          const clickable = !!(char.sheet || char.url);
+          const clickable = isClickable(char);
           const src = char.thumbnail ?? char.sheet;
           return (
             <div key={char.id} className={`prev-card${clickable ? ' clickable' : ''}`}
-              onClick={() => clickable && handleClick(char, open)}>
+              onClick={() => clickable && openChar(char)}>
               {src
                 ? <img src={src} className="prev-img" alt={char.name} />
                 : <div className="prev-img prev-ph" />}
@@ -372,37 +371,51 @@ export default function App() {
   // 초기 상태는 현재 해시에서 파싱
   const initial = parseHash();
   const [page, setPage]                 = useState<Page>(initial.page);
-  const [interactionId, setInteractionId] = useState<string>(initial.sub);
+  const [interactionId, setInteractionId] = useState<string>(initial.page === 'interaction' ? initial.sub : '');
+  const [characterId, setCharacterId]   = useState<string>(initial.page === 'preview' ? initial.sub : '');
   const [search, setSearch]             = useState('');
   const [lbSrc, setLbSrc]               = useState<string | null>(null);
   const characters = useCharacters();
 
-  // URL 해시 ← 상태 (페이지 또는 인터랙션 슬러그 변경 시 URL 업데이트)
+  // 현재 상세보기 캐릭터
+  const activeChar = characters.find(c => c.name.toLowerCase() === characterId.toLowerCase());
+
+  // URL 해시 ← 상태 (페이지 또는 sub 변경 시 URL 업데이트)
   useEffect(() => {
-    const sub = page === 'interaction' ? interactionId : '';
+    let sub = '';
+    if (page === 'interaction') sub = interactionId;
+    else if (page === 'preview') sub = characterId;
     const newHash = buildHash(page, sub);
-    // 깨끗한 URL(해시 없음) 상태에서 default 페이지면 '#/' 추가 생략
     if (newHash === '#/' && window.location.hash === '') return;
     if (window.location.hash !== newHash) {
       window.location.hash = newHash;
     }
-  }, [page, interactionId]);
+  }, [page, interactionId, characterId]);
 
   // URL 해시 → 상태 (뒤로 가기/직접 입력 대응)
   useEffect(() => {
     const onHashChange = () => {
       const { page: p, sub } = parseHash();
       setPage(p);
-      setInteractionId(sub);
+      setInteractionId(p === 'interaction' ? sub : '');
+      setCharacterId(p === 'preview' ? sub : '');
     };
     window.addEventListener('hashchange', onHashChange);
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
 
-  // 페이지 전환 시 인터랙션 슬러그 자동 초기화 (interaction 페이지 떠나면 비움)
+  // 페이지 전환 시 sub 자동 초기화
   useEffect(() => {
     if (page !== 'interaction' && interactionId) setInteractionId('');
+    if (page !== 'preview'     && characterId)   setCharacterId('');
   }, [page]);
+
+  // 캐릭터 클릭 — 상세 이미지 우선, 없으면 sheet → lightbox, url → 외부 링크
+  const openChar = (c: Character) => {
+    if (c.detail) { setPage('preview'); setCharacterId(c.name); }
+    else if (c.sheet) setLbSrc(c.sheet);
+    else if (c.url)   window.open(c.url, '_blank', 'noopener,noreferrer');
+  };
 
   return (
     <div className="app">
@@ -447,8 +460,8 @@ export default function App() {
       {/* Content */}
       <main className="main">
         <AnimatePresence mode="wait">
-          {page === 'archive'     && <ArchivePage     key="archive"     open={setLbSrc} search={search} characters={characters} />}
-          {page === 'preview'     && <PreviewPage     key="preview"     open={setLbSrc} search={search} characters={characters} />}
+          {page === 'archive'     && <ArchivePage     key="archive"     openChar={openChar} search={search} characters={characters} />}
+          {page === 'preview'     && <PreviewPage     key="preview"     openChar={openChar} search={search} characters={characters} />}
           {page === 'interaction' && <InteractionPage key="interaction" activeId={interactionId} setActiveId={setInteractionId} />}
           {page === 'font'        && <FontPage        key="font" />}
           {page === 'about'       && <AboutPage       key="about" count={characters.length} />}
@@ -458,6 +471,18 @@ export default function App() {
 
       <AnimatePresence>
         {lbSrc && <Lightbox src={lbSrc} onClose={() => setLbSrc(null)} />}
+      </AnimatePresence>
+
+      {/* 캐릭터 상세 페이지 (link 폴더 이미지) */}
+      <AnimatePresence>
+        {activeChar?.detail && (
+          <motion.div className="char-detail"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}>
+            <img src={activeChar.detail} className="char-detail-img" alt={activeChar.name} />
+            <button className="char-detail-close" onClick={() => setCharacterId('')}>✕</button>
+          </motion.div>
+        )}
       </AnimatePresence>
     </div>
   );
