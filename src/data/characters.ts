@@ -35,4 +35,5 @@ export const characters: Character[] = [
   { id: 'WI-010', name: 'Woo-Tang', category: 'Neutral', year: 2025, creator: 'Sung',   placeholder: false, thumbnail: '/characters/Woo-Tang_Sung_2025.png' },
   { id: 'WI-011', name: 'Mongsille', category: 'Neutral', year: 2025, creator: 'Hanzhang', placeholder: false, thumbnail: '/characters/Mongsille_Hanzhang_2025.png', url: 'https://www.instagram.com/mongsilee_2025?igsh=MXBlaG54ejIwMDVvdw==' },
   { id: 'WI-012', name: 'Haoyu', category: 'Neutral', year: 2025, creator: 'Puffa', placeholder: false, thumbnail: '/characters/haoyu_puffa_2025.jpg' },
+  { id: 'WI-013', name: 'Bloop', category: 'Neutral', year: 2026, creator: 'Dongho', placeholder: false, thumbnail: '/characters/Bloop_Dongho_2026.png' },
 ];
