@@ -10,6 +10,7 @@ export interface Character {
   sheet?: string;       // 라이트박스 풀이미지
   url?: string;         // 외부 창작자 링크
   detail?: string | string[]; // 상세페이지 이미지 (배열이면 여러 페이지)
+  instagram?: string;   // 상세페이지 인스타그램 링크
 }
 
 export const characters: Character[] = [
@@ -40,7 +41,7 @@ export const characters: Character[] = [
   { id: 'WI-014', name: 'Mossibi', category: 'Neutral', year: 2026, creator: 'leeyoonseo', placeholder: false, thumbnail: '/characters/Mossibi_leeyoonseo_2026.png', detail: '/characters/link/link_Mossibi_leeyoonseo_2026.png' },
   { id: 'WI-015', name: 'Jitter',  category: 'Neutral', year: 2026, creator: 'Bum',      placeholder: false, thumbnail: '/characters/Jitter_bum_2026.png',     detail: '/characters/link/link_Jitter_bum_2026.png' },
   { id: 'WI-016', name: 'Moa',     category: 'Neutral', year: 2026, creator: 'Seonghun', placeholder: false, thumbnail: '/characters/Moa_Seonghun_2026.png',   detail: '/characters/link/link_Moa_Seonghun_2026.png' },
-  { id: 'WI-017', name: 'NORUT',   category: 'Neutral', year: 2026, creator: 'Ara',      placeholder: false, thumbnail: '/characters/NORUT_ara_2026.png',      detail: ['/characters/link/link_NORUT_ara_2026.png','/characters/link/link_NORUT_ara_2026_2.png','/characters/link/link_NORUT_ara_2026_3.png'] },
+  { id: 'WI-017', name: 'NORUT',   category: 'Neutral', year: 2026, creator: 'Ara',      placeholder: false, thumbnail: '/characters/NORUT_ara_2026.png',      detail: ['/characters/link/link_NORUT_ara_2026.png','/characters/link/link_NORUT_ara_2026_2.png','/characters/link/link_NORUT_ara_2026_3.png'], instagram: 'https://www.instagram.com/glutenforce_official/' },
   { id: 'WI-018', name: 'Enzo',    category: 'Neutral', year: 2026, creator: 'Ilpoong',  placeholder: false, thumbnail: '/characters/enzo_Ilpoong_2026.png',   detail: '/characters/link/link_enzo_Ilpoong_2026.png' },
   { id: 'WI-019', name: 'Ruri',    category: 'Neutral', year: 2026, creator: 'Wltn',     placeholder: false, thumbnail: '/characters/ruri_wltn_2026.jpg',      detail: '/characters/link/link_ruri_wltn_2026.jpg' },
   { id: 'WI-020', name: 'Zigmi',   category: 'Neutral', year: 2026, creator: 'Sujeong',  placeholder: false, thumbnail: '/characters/zigmi_sujeong_2026.png',  detail: '/characters/link/link_zigmi_sujeong_2026.png' },
