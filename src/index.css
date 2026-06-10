@@ -292,7 +292,12 @@ button, select, input {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  outline: none;
+  cursor: text;
+  caret-color: #000;
 }
+.font-preview-text:hover { background: #fafafa; }
+.font-preview-text:focus { background: #f4f4f4; }
 
 .font-preview-text.po-emoji {
   font-family: 'PoEmoji', sans-serif;

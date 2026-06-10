@@ -184,22 +184,29 @@ function ArchivePage({ openChar, search, characters }: {
 function PreviewPage({ openChar, search, characters }: {
   openChar: (c: Character) => void; search: string; characters: Character[];
 }) {
+  const [sort, setSort] = useState<Sort>('alphabetical');
   const list = useMemo(() => {
     let arr = [...characters];
     if (search) arr = arr.filter(c => c.name.toLowerCase().includes(search.toLowerCase()));
     return arr.sort((a, b) => {
       if (a.pinned && !b.pinned) return -1;
       if (!a.pinned && b.pinned) return 1;
-      return a.name.localeCompare(b.name);
+      return sort === 'alphabetical'
+        ? a.name.localeCompare(b.name)
+        : b.year - a.year;
     });
-  }, [search, characters]);
+  }, [search, characters, sort]);
 
   return (
     <Fade>
       <div className="content-header">
-        <span className="sort-btn on">A–Z</span>
+        <button className={`sort-btn${sort === 'alphabetical' ? ' on' : ''}`} onClick={() => setSort('alphabetical')}>
+          A–Z
+        </button>
         <span>Character</span>
-        <span />
+        <button className={`sort-btn${sort === 'chronological' ? ' on' : ''}`} onClick={() => setSort('chronological')}>
+          Year
+        </button>
       </div>
       <div className="preview-grid">
         {list.map(char => {
@@ -378,7 +385,16 @@ function FontPage() {
       <div className="font-list">
         {fonts.map(f => (
           <div key={f.id} className="font-item">
-            <div className="font-preview-text" style={{ fontFamily: `'${f.name}', sans-serif` }}>
+            {/* key에 previewText를 포함시켜 글로벌 입력 변경 시 각 미리보기를 리셋,
+                평소엔 contentEditable로 개별 편집 가능 */}
+            <div
+              key={`${f.id}-${previewText}`}
+              className="font-preview-text"
+              contentEditable
+              suppressContentEditableWarning
+              spellCheck={false}
+              style={{ fontFamily: `'${f.name}', sans-serif` }}
+            >
               {previewText || f.preview}
             </div>
             <div className="font-row">
