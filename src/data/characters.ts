@@ -38,4 +38,13 @@ export const characters: Character[] = [
   { id: 'WI-012', name: 'Haoyu', category: 'Neutral', year: 2025, creator: 'Puffa', placeholder: false, thumbnail: '/characters/haoyu_puffa_2025.jpg' },
   { id: 'WI-013', name: 'Bloop',   category: 'Neutral', year: 2026, creator: 'Dongho',     placeholder: false, thumbnail: '/characters/Bloop_Dongho_2026.png',    detail: '/characters/link/link_Bloop_Dongho_2026.png' },
   { id: 'WI-014', name: 'Mossibi', category: 'Neutral', year: 2026, creator: 'leeyoonseo', placeholder: false, thumbnail: '/characters/Mossibi_leeyoonseo_2026.png', detail: '/characters/link/link_Mossibi_leeyoonseo_2026.png' },
+  { id: 'WI-015', name: 'Jitter',  category: 'Neutral', year: 2026, creator: 'Bum',      placeholder: false, thumbnail: '/characters/Jitter_bum_2026.png',     detail: '/characters/link/link_Jitter_bum_2026.png' },
+  { id: 'WI-016', name: 'Moa',     category: 'Neutral', year: 2026, creator: 'Seonghun', placeholder: false, thumbnail: '/characters/Moa_Seonghun_2026.png',   detail: '/characters/link/link_Moa_Seonghun_2026.png' },
+  { id: 'WI-017', name: 'NORUT',   category: 'Neutral', year: 2026, creator: 'Ara',      placeholder: false, thumbnail: '/characters/NORUT_ara_2026.png',      detail: '/characters/link/link_NORUT_ara_2026.png' },
+  { id: 'WI-018', name: 'Enzo',    category: 'Neutral', year: 2026, creator: 'Ilpoong',  placeholder: false, thumbnail: '/characters/enzo_Ilpoong_2026.png',   detail: '/characters/link/link_enzo_Ilpoong_2026.png' },
+  { id: 'WI-019', name: 'Ruri',    category: 'Neutral', year: 2026, creator: 'Wltn',     placeholder: false, thumbnail: '/characters/ruri_wltn_2026.jpg',      detail: '/characters/link/link_ruri_wltn_2026.jpg' },
+  { id: 'WI-020', name: 'Zigmi',   category: 'Neutral', year: 2026, creator: 'Sujeong',  placeholder: false, thumbnail: '/characters/zigmi_sujeong_2026.png',  detail: '/characters/link/link_zigmi_sujeong_2026.png' },
+  { id: 'WI-021', name: 'Piorid',  category: 'Neutral', year: 2026, creator: 'Naseon',   placeholder: false, thumbnail: '/characters/Piorid_Naseon_2026.png' },
+  { id: 'WI-022', name: 'RUEL',    category: 'Neutral', year: 2026, creator: 'Jiman',    placeholder: false, thumbnail: '/characters/RUEL_Jiman_2026.png' },
+  { id: 'WI-023', name: 'Rua',     category: 'Neutral', year: 2026, creator: 'Seohyun',  placeholder: false, thumbnail: '/characters/Rua_Seohyun_2026.png' },
 ];

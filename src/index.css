@@ -65,6 +65,46 @@
   font-weight: normal; font-style: normal;
 }
 @font-face {
+  font-family: 'Enzo';
+  src: url('/fonts/ENZO.ttf') format('truetype');
+  font-weight: normal; font-style: normal;
+}
+@font-face {
+  font-family: 'Jitter';
+  src: url('/fonts/Jitter.otf') format('opentype');
+  font-weight: normal; font-style: normal;
+}
+@font-face {
+  font-family: 'Moa';
+  src: url('/fonts/Moa.ttf') format('truetype');
+  font-weight: normal; font-style: normal;
+}
+@font-face {
+  font-family: 'Piorid';
+  src: url('/fonts/Piorid.otf') format('opentype');
+  font-weight: normal; font-style: normal;
+}
+@font-face {
+  font-family: 'RUEL';
+  src: url('/fonts/RUEL.otf') format('opentype');
+  font-weight: normal; font-style: normal;
+}
+@font-face {
+  font-family: 'Ruri';
+  src: url('/fonts/Ruri.otf') format('opentype');
+  font-weight: normal; font-style: normal;
+}
+@font-face {
+  font-family: 'Zigmi';
+  src: url('/fonts/Zigmi.otf') format('opentype');
+  font-weight: normal; font-style: normal;
+}
+@font-face {
+  font-family: 'Bakery';
+  src: url('/fonts/bakery.otf') format('opentype');
+  font-weight: normal; font-style: normal;
+}
+@font-face {
   font-family: 'PoEmoji';
   src: url('/fonts/POEMOJI.ttf') format('truetype');
   font-weight: normal; font-style: normal;
