@@ -87,6 +87,11 @@ function isClickable(c: Character) {
   return !!(c.detail || c.sheet || c.url);
 }
 
+// 그리드용 작은 썸네일 경로 — /characters/x.webp → /characters/thumbs/x.webp
+function thumbPath(p: string): string {
+  return p.replace(/^\/characters\/([^/]+)$/, '/characters/thumbs/$1');
+}
+
 // ─── Lightbox ─────────────────────────────────────────────────────────────────
 function Lightbox({ src, onClose }: { src: string; onClose: () => void }) {
   return (
@@ -200,11 +205,19 @@ function PreviewPage({ openChar, search, characters }: {
         {list.map(char => {
           const clickable = isClickable(char);
           const src = char.thumbnail ?? char.sheet;
+          const small = src ? thumbPath(src) : '';
           return (
             <div key={char.id} className={`prev-card${clickable ? ' clickable' : ''}`}
               onClick={() => clickable && openChar(char)}>
               {src
-                ? <img src={src} className="prev-img" alt={char.name} />
+                ? <img
+                    src={small || src}
+                    srcSet={small ? `${small} 1x, ${src} 2x` : undefined}
+                    className="prev-img"
+                    alt={char.name}
+                    loading="lazy"
+                    decoding="async"
+                  />
                 : <div className="prev-img prev-ph" />}
               <div className={`prev-label${char.placeholder ? ' strike' : ''}`}>
                 {char.creator}, 〈{char.name}〉, {char.year}.
@@ -234,6 +247,13 @@ function CharacterDetailPage({ char, onClose }: { char: Character; onClose: () =
     setIdx(next);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+  // 다음 페이지 미리 로드 (현재 페이지 보는 동안 백그라운드)
+  useEffect(() => {
+    if (hasNext) {
+      const img = new Image();
+      img.src = pages[idx + 1];
+    }
+  }, [idx, pages, hasNext]);
   return (
     <Fade>
       <div className="content-header">
@@ -255,7 +275,7 @@ function CharacterDetailPage({ char, onClose }: { char: Character; onClose: () =
           : <span />}
       </div>
       <div className="char-detail-wrap">
-        {pages[idx] && <img src={pages[idx]} className="char-detail-img" alt={char.name} />}
+        {pages[idx] && <img src={pages[idx]} className="char-detail-img" alt={char.name} decoding="async" />}
       </div>
       {(hasPrev || hasNext) && (
         <div className="cd-nav">
