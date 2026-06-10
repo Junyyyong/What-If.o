@@ -105,13 +105,18 @@
   font-weight: normal; font-style: normal;
 }
 @font-face {
+  font-family: 'Daily Bakery';
+  src: url('/fonts/DailyBakery.otf') format('opentype');
+  font-weight: normal; font-style: normal;
+}
+@font-face {
   font-family: 'Noto 1';
-  src: url('/fonts/Noto1.ttf') format('truetype');
+  src: url('/fonts/Noto.A.ttf') format('truetype');
   font-weight: normal; font-style: normal;
 }
 @font-face {
   font-family: 'Noto 2';
-  src: url('/fonts/Noto2.ttf') format('truetype');
+  src: url('/fonts/Noto.B.ttf') format('truetype');
   font-weight: normal; font-style: normal;
 }
 @font-face {
@@ -276,18 +281,13 @@ button, select, input {
 }
 
 .font-preview-text {
-  font-size: 112px;
+  font-size: 90px;
   line-height: 1.15;
   margin-bottom: 8px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  outline: none;
-  cursor: text;
-  caret-color: #000;
 }
-.font-preview-text:hover { background: #fafafa; }
-.font-preview-text:focus { background: #f4f4f4; }
 
 .font-preview-text.po-emoji {
   font-family: 'PoEmoji', sans-serif;

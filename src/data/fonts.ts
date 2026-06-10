@@ -218,7 +218,7 @@ export const fonts: Font[] = [
     preview: 'Noto 1',
     styles: 1,
     fileSize: '34 KB',
-    file: '/fonts/Noto1.ttf',
+    file: '/fonts/Noto.A.ttf',
   },
   {
     id: 'noto2',
@@ -228,7 +228,7 @@ export const fonts: Font[] = [
     preview: 'Noto 2',
     styles: 1,
     fileSize: '11 KB',
-    file: '/fonts/Noto2.ttf',
+    file: '/fonts/Noto.B.ttf',
   },
   {
     id: 'bakery',
@@ -239,6 +239,16 @@ export const fonts: Font[] = [
     styles: 1,
     fileSize: '—',
     file: '/fonts/bakery.otf',
+  },
+  {
+    id: 'dailybakery',
+    name: 'Daily Bakery',
+    description: '',
+    price: 'free',
+    preview: 'Daily Bakery',
+    styles: 1,
+    fileSize: '193 KB',
+    file: '/fonts/DailyBakery.otf',
   },
   {
     id: 'po-emoji',
