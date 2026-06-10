@@ -221,17 +221,42 @@ const AX_BASE_W = 1600;
 const AX_BASE_H = Math.round(AX_BASE_W * 9 / 16);
 
 // ─── Character Detail ───────────────────────────────────────────────────────
+function detailsOf(c: Character): string[] {
+  if (!c.detail) return [];
+  return Array.isArray(c.detail) ? c.detail : [c.detail];
+}
 function CharacterDetailPage({ char, onClose }: { char: Character; onClose: () => void }) {
+  const pages = detailsOf(char);
+  const [idx, setIdx] = useState(0);
+  const hasNext = idx < pages.length - 1;
+  const hasPrev = idx > 0;
+  const go = (next: number) => {
+    setIdx(next);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
   return (
     <Fade>
       <div className="content-header">
         <button className="sort-btn on cd-back" onClick={onClose}>← back</button>
-        <span>{char.creator}, 〈{char.name}〉, {char.year}</span>
+        <span>
+          {char.creator}, 〈{char.name}〉, {char.year}
+          {pages.length > 1 && <> · {idx + 1} / {pages.length}</>}
+        </span>
         <span />
       </div>
       <div className="char-detail-wrap">
-        {char.detail && <img src={char.detail} className="char-detail-img" alt={char.name} />}
+        {pages[idx] && <img src={pages[idx]} className="char-detail-img" alt={char.name} />}
       </div>
+      {(hasPrev || hasNext) && (
+        <div className="cd-nav">
+          {hasPrev
+            ? <button className="cd-arrow" onClick={() => go(idx - 1)}>←</button>
+            : <span />}
+          {hasNext
+            ? <button className="cd-arrow" onClick={() => go(idx + 1)}>→</button>
+            : <span />}
+        </div>
+      )}
     </Fade>
   );
 }
