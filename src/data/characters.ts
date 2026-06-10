@@ -47,4 +47,5 @@ export const characters: Character[] = [
   { id: 'WI-021', name: 'Piorid',  category: 'Neutral', year: 2026, creator: 'Naseon',   placeholder: false, thumbnail: '/characters/Piorid_Naseon_2026.png' },
   { id: 'WI-022', name: 'RUEL',    category: 'Neutral', year: 2026, creator: 'Jiman',    placeholder: false, thumbnail: '/characters/RUEL_Jiman_2026.png' },
   { id: 'WI-023', name: 'Rua',     category: 'Neutral', year: 2026, creator: 'Seohyun',  placeholder: false, thumbnail: '/characters/Rua_Seohyun_2026.png' },
+  { id: 'WI-024', name: 'Noto',    category: 'Neutral', year: 2026, creator: 'Yejin',    placeholder: false, thumbnail: '/characters/Noto_Yejin_2026.png',     detail: '/characters/link/link_Noto_Yejin_2026.png' },
 ];

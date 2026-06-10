@@ -105,6 +105,16 @@
   font-weight: normal; font-style: normal;
 }
 @font-face {
+  font-family: 'Noto 1';
+  src: url('/fonts/Noto1.ttf') format('truetype');
+  font-weight: normal; font-style: normal;
+}
+@font-face {
+  font-family: 'Noto 2';
+  src: url('/fonts/Noto2.ttf') format('truetype');
+  font-weight: normal; font-style: normal;
+}
+@font-face {
   font-family: 'PoEmoji';
   src: url('/fonts/POEMOJI.ttf') format('truetype');
   font-weight: normal; font-style: normal;
