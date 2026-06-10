@@ -110,12 +110,12 @@
   font-weight: normal; font-style: normal;
 }
 @font-face {
-  font-family: 'Noto 1';
+  font-family: 'Noto A';
   src: url('/fonts/Noto.A.ttf') format('truetype');
   font-weight: normal; font-style: normal;
 }
 @font-face {
-  font-family: 'Noto 2';
+  font-family: 'Noto B';
   src: url('/fonts/Noto.B.ttf') format('truetype');
   font-weight: normal; font-style: normal;
 }
