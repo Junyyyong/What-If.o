@@ -130,7 +130,7 @@
       </div>
     </div>
   </div>
-  <div id="hint">점 드래그: 위치 · Shift+드래그: 깊이 · 배경 드래그: 3D 회전 · 학기 1=전기 2=후기</div>
+  <div id="hint">점 드래그: 위치 · Shift+드래그(점/박스 핸들): 깊이 · 배경 드래그: 3D 회전 · 학기 1=전기 2=후기</div>
 
   <script>
     // ====== 그리드/viewBox 좌표계 ======
@@ -155,8 +155,8 @@
     const DIGIT_SRC_Y = 448.08;
 
     // ====== 상태 ======
-    let box1 = { w: 180, h: 154, isResizing:false, draggingPointIdx:-1, points: [] };
-    let box2 = { w: 240, h: 154, isResizing:false, draggingPointIdx:-1, points: [] };
+    let box1 = { w: 180, h: 154, d: 55, isResizing:false, draggingPointIdx:-1, points: [] };
+    let box2 = { w: 240, h: 154, d: 55, isResizing:false, draggingPointIdx:-1, points: [] };
     let orientation = 'back'; // 'back'=후기(정방향, 글씨 위) / 'front'=전기(반전, 글씨 아래)
 
     const Z_BRIGHT_MIN = 60, Z_BRIGHT_MAX = 100;
@@ -294,7 +294,7 @@
       return {
         x: boxX0(box, isLeft) + pt.relX * box.w,
         y: boxY0(box) + pt.relY * box.h,
-        z: (pt.relZ || 0) * Z_SCALE
+        z: (pt.relZ || 0) * (box.d ?? Z_SCALE)
       };
     }
     // 기하 좌표 (미러 적용) — 그리기/픽킹용
@@ -529,7 +529,7 @@
       noFill(); stroke(boxColor); strokeWeight(0.6);
       const x1 = boxX0(box, isLeft), x2 = x1 + box.w;
       const yT = mirrorY(boxY0(box)), yB = mirrorY(FLOWER_BOTTOM_Y);
-      const d = Z_SCALE;
+      const d = box.d ?? Z_SCALE;
       // 정면(z=+d)
       rLine(x1,yT,d, x2,yT,d); rLine(x2,yT,d, x2,yB,d); rLine(x2,yB,d, x1,yB,d); rLine(x1,yB,d, x1,yT,d);
       // 뒷면(z=-d)
@@ -662,7 +662,7 @@
         }
         const x1 = boxX0(b, isLeft), x2 = x1 + b.w;
         const hx = isLeft ? x1 : x2;
-        const H = rot(hx, mirrorY(boxY0(b)), Z_SCALE);
+        const H = rot(hx, mirrorY(boxY0(b)), b.d ?? Z_SCALE);
         const hs = toScreen(H.x, H.y);
         b._hsx = hs.x; b._hsy = hs.y;
       }
@@ -686,8 +686,8 @@
       if (idx >= 0) { box1.draggingPointIdx = idx; box1._da = { relX:box1.points[idx].relX, relY:box1.points[idx].relY, mx:mouseX, my:mouseY }; return; }
       idx = pickPoint(box2);
       if (idx >= 0) { box2.draggingPointIdx = idx; box2._da = { relX:box2.points[idx].relX, relY:box2.points[idx].relY, mx:mouseX, my:mouseY }; return; }
-      if (pickHandle(box1)) { box1.isResizing = true; box1._ra = { w:box1.w, h:box1.h, mx:mouseX, my:mouseY }; return; }
-      if (pickHandle(box2)) { box2.isResizing = true; box2._ra = { w:box2.w, h:box2.h, mx:mouseX, my:mouseY }; return; }
+      if (pickHandle(box1)) { box1.isResizing = true; box1._ra = { w:box1.w, h:box1.h, d:box1.d, mx:mouseX, my:mouseY }; return; }
+      if (pickHandle(box2)) { box2.isResizing = true; box2._ra = { w:box2.w, h:box2.h, d:box2.d, mx:mouseX, my:mouseY }; return; }
       cam.isDragging = true;
     }
 
@@ -715,6 +715,12 @@
       }
     }
     function resizeBox(box, isLeft) {
+      if (keyIsDown(SHIFT)) {
+        // Shift+드래그: 박스 깊이 (z) 조절. 위로 끌면 깊어짐
+        const dy = (box._ra.my - mouseY) / FIT_S;
+        box.d = constrain(box._ra.d + dy * 0.6, 5, 400);
+        return;
+      }
       const sd = screenDeltaToPlane(mouseX - box._ra.mx, mouseY - box._ra.my);
       const wSign = isLeft ? -1 : 1; // 바깥쪽으로 끌면 넓어짐
       box.w = constrain(box._ra.w + wSign*sd.dx, 60, 2000);
