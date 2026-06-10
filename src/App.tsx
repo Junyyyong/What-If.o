@@ -332,25 +332,24 @@ function InteractionPage({ activeId, setActiveId }: {
 
 // ─── Font ─────────────────────────────────────────────────────────────────────
 function FontPage() {
-  const [previewText, setPreviewText] = useState('');
-
   return (
     <Fade>
       <div className="content-header">
         <span className="sort-btn on">A–Z</span>
         <span>Font</span>
-        <input
-          className="font-preview-input"
-          placeholder="Type to preview…"
-          value={previewText}
-          onChange={e => setPreviewText(e.target.value)}
-        />
+        <span />
       </div>
       <div className="font-list">
         {fonts.map(f => (
           <div key={f.id} className="font-item">
-            <div className="font-preview-text" style={{ fontFamily: `'${f.name}', sans-serif` }}>
-              {previewText || f.preview}
+            <div
+              className="font-preview-text"
+              contentEditable
+              suppressContentEditableWarning
+              spellCheck={false}
+              style={{ fontFamily: `'${f.name}', sans-serif` }}
+            >
+              {f.preview}
             </div>
             <div className="font-row">
               <span className="font-name">{f.name}</span>
