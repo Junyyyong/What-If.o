@@ -394,6 +394,12 @@ function FontPage() {
               suppressContentEditableWarning
               spellCheck={false}
               style={{ fontFamily: `'${f.name}', sans-serif` }}
+              onPaste={(e) => {
+                // 다른 폰트에서 복사한 텍스트의 서식을 제거하고 plain text만 붙여넣기
+                e.preventDefault();
+                const text = e.clipboardData.getData('text/plain');
+                document.execCommand('insertText', false, text);
+              }}
             >
               {previewText || f.preview}
             </div>
