@@ -231,6 +231,16 @@ export const fonts: Font[] = [
     file: '/fonts/Noto.B.ttf',
   },
   {
+    id: 'vyra',
+    name: 'Vyra',
+    description: '',
+    price: 'free',
+    preview: 'Vyra',
+    styles: 1,
+    fileSize: '11 KB',
+    file: '/fonts/Vyra.otf',
+  },
+  {
     id: 'bakery',
     name: 'Bakery',
     description: '',

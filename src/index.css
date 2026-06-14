@@ -100,6 +100,11 @@
   font-weight: normal; font-style: normal; font-display: swap;
 }
 @font-face {
+  font-family: 'Vyra';
+  src: url('/fonts/Vyra.otf') format('opentype');
+  font-weight: normal; font-style: normal; font-display: swap;
+}
+@font-face {
   font-family: 'Bakery';
   src: url('/fonts/bakery.otf') format('opentype');
   font-weight: normal; font-style: normal; font-display: swap;

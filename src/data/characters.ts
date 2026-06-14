@@ -46,7 +46,8 @@ export const characters: Character[] = [
   { id: 'WI-019', name: 'Ruri',    category: 'Neutral', year: 2026, creator: 'Wltn',     placeholder: false, thumbnail: '/characters/ruri_wltn_2026.webp',      detail: '/characters/link/link_ruri_wltn_2026.webp', instagram: 'https://www.instagram.com/eerooree/' },
   { id: 'WI-020', name: 'Zigmi',   category: 'Neutral', year: 2026, creator: 'Sujeong',  placeholder: false, thumbnail: '/characters/zigmi_sujeong_2026.webp',  detail: '/characters/link/link_zigmi_sujeong_2026.webp' },
   { id: 'WI-021', name: 'Piorid',  category: 'Neutral', year: 2026, creator: 'Naseon',   placeholder: false, thumbnail: '/characters/Piorid_Naseon_2026.webp' },
-  { id: 'WI-022', name: 'RUEL',    category: 'Neutral', year: 2026, creator: 'Jiman',    placeholder: false, thumbnail: '/characters/RUEL_Jiman_2026.webp' },
+  { id: 'WI-022', name: 'RUEL',    category: 'Neutral', year: 2026, creator: 'Jiman',    placeholder: false, thumbnail: '/characters/RUEL_Jiman_2026.webp', detail: '/characters/link/link_RUEL_Jiman_2026.webp' },
   { id: 'WI-023', name: 'Rua',     category: 'Neutral', year: 2026, creator: 'Seohyun',  placeholder: false, thumbnail: '/characters/Rua_Seohyun_2026.webp' },
   { id: 'WI-024', name: 'Noto',    category: 'Neutral', year: 2026, creator: 'Yejin',    placeholder: false, thumbnail: '/characters/Noto_Yejin_2026.webp',     detail: '/characters/link/link_Noto_Yejin_2026.webp' },
+  { id: 'WI-025', name: 'Vyra',    category: 'Neutral', year: 2026, creator: 'cxd',      placeholder: false, thumbnail: '/characters/Vyra_cxd_2026.webp',      detail: '/characters/link/link_Vyra_cxd_2026.webp' },
 ];
