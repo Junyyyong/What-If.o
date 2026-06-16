@@ -347,37 +347,42 @@ function InteractionPage({ activeId, setActiveId, onCloseActive, characters }: {
 
   return (
     <Fade>
-      <div className="content-header">
-        <span className="sort-btn on">A–Z</span>
-        <span>Interaction</span>
-        <span />
-      </div>
-
-      {/* AX 기본 임베드 — 비율 유지 스케일 */}
-      <div className="ix-embed" ref={embedRef}>
-        <iframe
-          src={ax.path}
-          title="AX"
-          style={{
-            width: AX_BASE_W,
-            height: AX_BASE_H,
-            border: 'none',
-            transformOrigin: 'top left',
-            transform: `scale(${scale})`,
-          }}
-        />
-      </div>
-
-      {/* 7단 그리드 목록 */}
-      <div className="archive-cols">
-        {items.map(item => (
-          <div key={item.id} className="arc-entry clickable"
-            onClick={() => setActiveId(item.id)}>
-            <span>{item.title}</span>
-            <span className="arc-year">{item.year}</span>
+      {/* 활성 인터랙션이 없을 때만 탭 기본 콘텐츠 렌더 (오버레이 진입 시 탭이 비치는 현상 방지) */}
+      {!activeItem && (
+        <>
+          <div className="content-header">
+            <span className="sort-btn on">A–Z</span>
+            <span>Interaction</span>
+            <span />
           </div>
-        ))}
-      </div>
+
+          {/* AX 기본 임베드 — 비율 유지 스케일 */}
+          <div className="ix-embed" ref={embedRef}>
+            <iframe
+              src={ax.path}
+              title="AX"
+              style={{
+                width: AX_BASE_W,
+                height: AX_BASE_H,
+                border: 'none',
+                transformOrigin: 'top left',
+                transform: `scale(${scale})`,
+              }}
+            />
+          </div>
+
+          {/* 7단 그리드 목록 */}
+          <div className="archive-cols">
+            {items.map(item => (
+              <div key={item.id} className="arc-entry clickable"
+                onClick={() => setActiveId(item.id)}>
+                <span>{item.title}</span>
+                <span className="arc-year">{item.year}</span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
 
       <AnimatePresence>
         {activeItem && (
