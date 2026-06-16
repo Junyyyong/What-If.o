@@ -245,7 +245,9 @@ function detailsOf(c: Character): string[] {
   if (!c.detail) return [];
   return Array.isArray(c.detail) ? c.detail : [c.detail];
 }
-function CharacterDetailPage({ char, onClose }: { char: Character; onClose: () => void }) {
+function CharacterDetailPage({ char, onClose, onOpenInteraction }: {
+  char: Character; onClose: () => void; onOpenInteraction: (id: string) => void;
+}) {
   const pages = detailsOf(char);
   const [idx, setIdx] = useState(0);
   const hasNext = idx < pages.length - 1;
@@ -269,17 +271,32 @@ function CharacterDetailPage({ char, onClose }: { char: Character; onClose: () =
           {char.creator}, 〈{char.name}〉, {char.year}
           {pages.length > 1 && <> · {idx + 1} / {pages.length}</>}
         </span>
-        {char.instagram
-          ? (
-            <a href={char.instagram} target="_blank" rel="noopener noreferrer" className="cd-ig" title="Instagram">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
-                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-                <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
-              </svg>
-            </a>
-          )
-          : <span />}
+        {(char.instagram || char.interaction) ? (
+          <div className="cd-icons">
+            {char.interaction && (
+              <button
+                className="cd-ig cd-interaction-btn"
+                title="Interaction"
+                onClick={() => onOpenInteraction(char.name.toLowerCase())}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+                  <line x1="8" y1="21" x2="16" y2="21" />
+                  <line x1="12" y1="17" x2="12" y2="21" />
+                </svg>
+              </button>
+            )}
+            {char.instagram && (
+              <a href={char.instagram} target="_blank" rel="noopener noreferrer" className="cd-ig" title="Instagram">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                  <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+                </svg>
+              </a>
+            )}
+          </div>
+        ) : <span />}
       </div>
       <div className="char-detail-wrap">
         {pages[idx] && <img src={pages[idx]} className="char-detail-img" alt={char.name} decoding="async" />}
@@ -298,15 +315,24 @@ function CharacterDetailPage({ char, onClose }: { char: Character; onClose: () =
   );
 }
 
+// 정적 인터랙션 + 캐릭터에 연결된 인터랙션 병합
+function mergedInteractions(characters: Character[]) {
+  const charItems = characters
+    .filter(c => c.interaction)
+    .map(c => ({ id: c.name.toLowerCase(), title: c.name, path: c.interaction!, year: c.year }));
+  return [...interactions, ...charItems];
+}
+
 // ─── Interaction ──────────────────────────────────────────────────────────────
-function InteractionPage({ activeId, setActiveId }: {
-  activeId: string; setActiveId: (id: string) => void;
+function InteractionPage({ activeId, setActiveId, characters }: {
+  activeId: string; setActiveId: (id: string) => void; characters: Character[];
 }) {
   const embedRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
-  const ax = interactions.find(i => i.id === 'AX')!;
+  const items = useMemo(() => mergedInteractions(characters), [characters]);
+  const ax = items.find(i => i.id === 'AX')!;
   // 대소문자 무시하고 id 매칭
-  const activeItem = interactions.find(i => i.id.toLowerCase() === activeId.toLowerCase());
+  const activeItem = items.find(i => i.id.toLowerCase() === activeId.toLowerCase());
 
   useEffect(() => {
     const update = () => {
@@ -344,7 +370,7 @@ function InteractionPage({ activeId, setActiveId }: {
 
       {/* 7단 그리드 목록 */}
       <div className="archive-cols">
-        {interactions.map(item => (
+        {items.map(item => (
           <div key={item.id} className="arc-entry clickable"
             onClick={() => setActiveId(item.id)}>
             <span>{item.title}</span>
@@ -359,6 +385,7 @@ function InteractionPage({ activeId, setActiveId }: {
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}>
             <iframe src={activeItem.path} className="ix-frame" title={activeItem.title} />
+            <a href={activeItem.path} target="_blank" rel="noopener noreferrer" className="ix-newtab" title="Open in new tab">↗</a>
             <button className="ix-close" onClick={() => setActiveId('')}>✕</button>
           </motion.div>
         )}
@@ -554,9 +581,11 @@ export default function App() {
         <AnimatePresence mode="wait">
           {page === 'archive'     && <ArchivePage     key="archive"     openChar={openChar} search={search} characters={characters} />}
           {page === 'preview' && (activeChar?.detail
-            ? <CharacterDetailPage key={`detail-${activeChar.name}`} char={activeChar} onClose={() => setCharacterId('')} />
+            ? <CharacterDetailPage key={`detail-${activeChar.name}`} char={activeChar}
+                onClose={() => setCharacterId('')}
+                onOpenInteraction={(id) => { setCharacterId(''); setPage('interaction'); setInteractionId(id); }} />
             : <PreviewPage     key="preview"     openChar={openChar} search={search} characters={characters} />)}
-          {page === 'interaction' && <InteractionPage key="interaction" activeId={interactionId} setActiveId={setInteractionId} />}
+          {page === 'interaction' && <InteractionPage key="interaction" activeId={interactionId} setActiveId={setInteractionId} characters={characters} />}
           {page === 'font'        && <FontPage        key="font" />}
           {page === 'about'       && <AboutPage       key="about" count={characters.length} />}
           {page === 'contact'     && <ContactPage     key="contact" />}

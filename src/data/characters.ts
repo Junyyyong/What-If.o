@@ -11,6 +11,7 @@ export interface Character {
   url?: string;         // 외부 창작자 링크
   detail?: string | string[]; // 상세페이지 이미지 (배열이면 여러 페이지)
   instagram?: string;   // 상세페이지 인스타그램 링크
+  interaction?: string; // 캐릭터별 인터랙션 URL (외부 사이트)
 }
 
 export const characters: Character[] = [
