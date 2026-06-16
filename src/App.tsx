@@ -324,8 +324,8 @@ function mergedInteractions(characters: Character[]) {
 }
 
 // ─── Interaction ──────────────────────────────────────────────────────────────
-function InteractionPage({ activeId, setActiveId, characters }: {
-  activeId: string; setActiveId: (id: string) => void; characters: Character[];
+function InteractionPage({ activeId, setActiveId, onCloseActive, characters }: {
+  activeId: string; setActiveId: (id: string) => void; onCloseActive: () => void; characters: Character[];
 }) {
   const embedRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
@@ -386,7 +386,7 @@ function InteractionPage({ activeId, setActiveId, characters }: {
             transition={{ duration: 0.15 }}>
             <iframe src={activeItem.path} className="ix-frame" title={activeItem.title} />
             <a href={activeItem.path} target="_blank" rel="noopener noreferrer" className="ix-newtab" title="Open in new tab">↗</a>
-            <button className="ix-close" onClick={() => setActiveId('')}>✕</button>
+            <button className="ix-close" onClick={onCloseActive}>✕</button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -494,6 +494,8 @@ export default function App() {
   const [characterId, setCharacterId]   = useState<string>(initial.page === 'preview' ? initial.sub : '');
   const [search, setSearch]             = useState('');
   const [lbSrc, setLbSrc]               = useState<string | null>(null);
+  // 인터랙션을 캐릭터 상세에서 열었을 때, 닫으면 돌아갈 캐릭터 이름
+  const [ixOrigin, setIxOrigin]         = useState<string>('');
   const characters = useCharacters();
 
   // 현재 상세보기 캐릭터
@@ -528,6 +530,19 @@ export default function App() {
     if (page !== 'interaction' && interactionId) setInteractionId('');
     if (page !== 'preview'     && characterId)   setCharacterId('');
   }, [page]);
+
+  // 인터랙션 닫기 — 캐릭터에서 열었으면 그 캐릭터 상세로 복귀, 아니면 Interaction 탭 유지
+  const closeInteraction = () => {
+    if (ixOrigin) {
+      const origin = ixOrigin;
+      setIxOrigin('');
+      setInteractionId('');
+      setPage('preview');
+      setCharacterId(origin);
+    } else {
+      setInteractionId('');
+    }
+  };
 
   // 캐릭터 클릭 — 상세 이미지 우선, 없으면 sheet → lightbox, url → 외부 링크
   const openChar = (c: Character) => {
@@ -583,9 +598,9 @@ export default function App() {
           {page === 'preview' && (activeChar?.detail
             ? <CharacterDetailPage key={`detail-${activeChar.name}`} char={activeChar}
                 onClose={() => setCharacterId('')}
-                onOpenInteraction={(id) => { setCharacterId(''); setPage('interaction'); setInteractionId(id); }} />
+                onOpenInteraction={(id) => { setIxOrigin(activeChar.name); setCharacterId(''); setPage('interaction'); setInteractionId(id); }} />
             : <PreviewPage     key="preview"     openChar={openChar} search={search} characters={characters} />)}
-          {page === 'interaction' && <InteractionPage key="interaction" activeId={interactionId} setActiveId={setInteractionId} characters={characters} />}
+          {page === 'interaction' && <InteractionPage key="interaction" activeId={interactionId} setActiveId={setInteractionId} onCloseActive={closeInteraction} characters={characters} />}
           {page === 'font'        && <FontPage        key="font" />}
           {page === 'about'       && <AboutPage       key="about" count={characters.length} />}
           {page === 'contact'     && <ContactPage     key="contact" />}
