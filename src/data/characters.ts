@@ -52,6 +52,6 @@ export const characters: Character[] = [
   { id: 'WI-024', name: 'Noto',    category: 'Neutral', year: 2026, creator: 'Yejin',    placeholder: false, thumbnail: '/characters/Noto_Yejin_2026.webp',     detail: '/characters/link/link_Noto_Yejin_2026.webp' },
   { id: 'WI-025', name: 'Vyra',    category: 'Neutral', year: 2026, creator: 'cxd',      placeholder: false, thumbnail: '/characters/Vyra_cxd_2026.webp',      detail: '/characters/link/link_Vyra_cxd_2026.webp', interaction: 'https://peppy-boba-e517ad.netlify.app/' },
   { id: 'WI-026', name: 'Mote',    category: 'Neutral', year: 2026, creator: 'hwajin',   placeholder: false, thumbnail: '/characters/Mote_hwajin_2026.webp' },
-  { id: 'WI-027', name: 'Nosey',   category: 'Neutral', year: 2026, creator: 'sanghyeob', placeholder: false, thumbnail: '/characters/Nosey_sanghyeob_2026.webp', detail: '/characters/link/link_Nosey_sanghyeob_2026.webp', interaction: 'https://noseytypegenerator.netlify.app/' },
+  { id: 'WI-027', name: 'Nosey',   category: 'Neutral', year: 2026, creator: 'sanghyeob', placeholder: false, thumbnail: '/characters/Nosey_sanghyeob_2026.webp', detail: '/characters/link/link_Nosey_sanghyeob_2026.webp', instagram: 'https://www.instagram.com/nose.monster/', interaction: 'https://noseytypegenerator.netlify.app/' },
   { id: 'WI-028', name: 'Recorder', category: 'Neutral', year: 2026, creator: 'eun',     placeholder: false, thumbnail: '/characters/Recorder_eun_2026.webp', detail: '/characters/link/link_Recorder_eun_2026.webp' },
 ];
