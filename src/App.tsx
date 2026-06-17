@@ -389,7 +389,12 @@ function InteractionPage({ activeId, setActiveId, onCloseActive, characters }: {
           <motion.div className="ix-backdrop"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}>
-            <iframe src={activeItem.path} className="ix-frame" title={activeItem.title} />
+            <iframe
+              src={activeItem.path}
+              className="ix-frame"
+              title={activeItem.title}
+              allow="microphone; camera; autoplay; fullscreen; xr-spatial-tracking; accelerometer; gyroscope; magnetometer; midi"
+            />
             <a href={activeItem.path} target="_blank" rel="noopener noreferrer" className="ix-newtab" title="Open in new tab">↗</a>
             <button className="ix-close" onClick={onCloseActive}>✕</button>
           </motion.div>
