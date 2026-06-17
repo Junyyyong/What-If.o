@@ -1,5 +1,10 @@
 /* ─── Custom fonts ───────────────────────────────────────────── */
 @font-face {
+  font-family: 'Nosey';
+  src: url('/fonts/Nosey.otf') format('opentype');
+  font-weight: normal; font-style: normal; font-display: swap;
+}
+@font-face {
   font-family: 'Dolin';
   src: url('/fonts/Dolin.otf') format('opentype');
   font-weight: normal; font-style: normal; font-display: swap;

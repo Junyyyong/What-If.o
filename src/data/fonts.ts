@@ -11,6 +11,16 @@ export interface Font {
 
 export const fonts: Font[] = [
   {
+    id: 'nosey',
+    name: 'Nosey',
+    description: '',
+    price: 'free',
+    preview: 'Nosey',
+    styles: 1,
+    fileSize: '91 KB',
+    file: '/fonts/Nosey.otf',
+  },
+  {
     id: 'dolin',
     name: 'Dolin',
     description: '',
