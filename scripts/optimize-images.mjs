@@ -30,6 +30,8 @@ const SRC_EXT    = new Set(['.png', '.jpg', '.jpeg']);
 const QUALITY    = 85;
 const THUMB_W    = 400;
 const THUMB_Q    = 80;
+const DETAIL_W   = 1200;  // 상세 이미지 최대 가로폭 (화면 표시 너비와 동일) — 디코딩 부담 감소
+const DETAIL_Q   = 82;
 
 let processed = 0;
 let skipped   = 0;
@@ -48,7 +50,7 @@ async function convert(srcPath, dstPath, opts = {}) {
   const dstMtime = await mtime(dstPath);
   if (dstMtime >= srcMtime) { skipped++; return; }
   let img = sharp(srcPath);
-  if (resizeWidth) img = img.resize({ width: resizeWidth });
+  if (resizeWidth) img = img.resize({ width: resizeWidth, withoutEnlargement: true });
   await img.webp({ quality, effort: 4 }).toFile(dstPath);
   const rel = path.relative(ROOT, dstPath);
   console.log(`  ✓ ${rel}${resizeWidth ? ` (w=${resizeWidth})` : ''}`);
@@ -65,8 +67,9 @@ async function processDir(dir, { generateThumb }) {
     if (!SRC_EXT.has(ext)) continue;
     const stat = await fs.stat(full);
     if (!stat.isFile()) continue;
-    // 원본 WebP
-    await convert(full, path.join(dir, `${base}.webp`));
+    // 원본 WebP (상세 이미지는 1200px로 캡)
+    await convert(full, path.join(dir, `${base}.webp`),
+      generateThumb ? {} : { resizeWidth: DETAIL_W, quality: DETAIL_Q });
     // 그리드용 작은 썸네일 (캐릭터 폴더만)
     if (generateThumb) {
       await fs.mkdir(THUMB_DIR, { recursive: true });
