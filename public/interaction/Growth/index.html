@@ -1,0 +1,1399 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Growth</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;background:#080808;display:flex;overflow:hidden;font-family:-apple-system,sans-serif;color:#bbb}
+
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-thumb{background:#333;border-radius:3px}
+
+#side{
+  width:290px;flex-shrink:0;background:#0f0f0f;
+  border-right:1px solid #1a1a1a;
+  display:flex;flex-direction:column;padding:52px 14px 20px;gap:12px;overflow-y:auto;
+}
+h1{font-size:15px;font-weight:700;color:#fff;letter-spacing:-.04em}
+#stTxt{font-size:10px;color:#2e2e2e;margin-top:3px}
+.lbl{font-size:9px;color:#282828;text-transform:uppercase;letter-spacing:.14em;margin-bottom:6px;font-weight:600}
+.hint{font-size:11px;color:#4a4a4a;line-height:1.6}
+.sec{display:flex;flex-direction:column;margin-bottom:4px}
+.hidden{display:none!important}
+
+#srcList{display:flex;flex-direction:column;gap:4px;margin-top:7px;margin-bottom:10px}
+.srow{display:flex;align-items:center;gap:8px;padding:6px 9px;background:#141414;border-radius:5px;border:1px solid #1c1c1c;cursor:pointer;transition:border-color .12s}
+.srow:hover{border-color:#2a2a2a}
+.srow.sel{border-color:#333;background:#1a1a1a}
+.sdot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.sname{font-size:11px;color:#666;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+#zoneEditorColorOnly{padding:15px;background:#1a1a1a;border-radius:8px;border:1px solid #222;}
+.row{display:flex;gap:6px;align-items:center}
+input[type="color"]{width:40px;height:24px;border:none;border-radius:3px;cursor:pointer;padding:0;background:none}
+
+.slider-row{display:flex;align-items:center;gap:6px; margin-top:10px;}
+.slider-row label{flex:1;font-size:10px;font-weight:bold;color:#fbb}
+input[type=range]{flex:1;accent-color:#555;height:2px}
+
+.actions{margin-top:auto;display:flex;flex-direction:column;gap:6px}
+.btn{width:100%;padding:10px 14px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;border:none;letter-spacing:-.01em;transition:all .12s}
+.btn-w{background:#e8e8e8;color:#111;position:relative;}.btn-w:hover{background:#fff}.btn-w:disabled{background:#141414;color:#202020;cursor:not-allowed}
+.btn-g{background:0;border:1px solid #1a1a1a;color:#444;position:relative;}.btn-g:hover:not(:disabled){border-color:#282828;color:#777}.btn-g:disabled{cursor:wait;opacity:0.5}
+
+#wrap{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#0d0d0d}
+#cv{display:block;cursor:crosshair;box-shadow:0 0 30px rgba(0,0,0,0.6)}
+
+#exportOverlay{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);color:white;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:99;font-size:14px;}
+.spinner{width:30px;height:30px;border:3px solid #333;border-top-color:#fff;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:15px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div id="side">
+  <div>
+    <h1 style="color:#fff;font-size:16px;">Vertex Growth Poster</h1>
+    <div id="stTxt" style="color:#888;">초정밀 꼭지점 프랙탈 증식 망</div>
+  </div>
+
+  <div class="sec" id="secPlace">
+    <div class="lbl">시작점 셋업</div>
+    <div class="hint" id="hint">캔버스를 클릭해 기점(삼각형)을 생성하세요. 파동은 꼭지점만을 따라 연결되며 번식합니다.</div>
+    <div id="srcList"></div>
+
+    <div id="zoneEditorColorOnly" class="hidden">
+      <div class="row">
+        <label style="font-size:11px;font-weight:600;color:#ddd">선택한 기점 색상</label>
+        <input type="color" id="zBgColorOnly" style="margin-left:auto;">
+      </div>
+      <div class="row" style="margin-top:10px;">
+        <label style="font-size:11px;font-weight:600;color:#ddd">출발 각도</label>
+        <input type="range" id="zStartAngle" min="-180" max="180" value="0" step="1" style="width:70px;margin-left:auto;">
+        <span id="zAngleVal" style="font-size:10px;color:#aaa;width:28px;text-align:right">0°</span>
+      </div>
+      <div class="row hidden" id="rowGroupRotation" style="margin-top:10px; border-top:1px solid #333; padding-top:10px;">
+        <label style="font-size:11px;font-weight:600;color:#ddd">형태 모양 회전</label>
+        <input type="range" id="zRotation" min="-180" max="180" value="0" step="1" style="width:70px;margin-left:auto;">
+        <span id="zRotationVal" style="font-size:10px;color:#aaa;width:28px;text-align:right">0°</span>
+      </div>
+      <div class="row hidden" id="rowGroupScale" style="margin-top:10px;">
+        <label style="font-size:11px;font-weight:600;color:#ddd">모양 비율 크기</label>
+        <input type="range" id="zScale" min="10" max="300" value="100" step="1" style="width:70px;margin-left:auto;">
+        <span id="zScaleVal" style="font-size:10px;color:#aaa;width:28px;text-align:right">100%</span>
+      </div>
+    </div>
+  </div>
+  
+  <div class="sec" id="secAutoSeed" style="margin-top:10px; border-top:1px solid #1c1c1c; padding-top:12px;">
+    <div class="lbl">이미지/기하학 형태 추출</div>
+    <div class="row" style="margin-bottom:10px;">
+      <label style="font-size:11px;font-weight:600;color:#ddd" title="값이 작을수록 점이 많아져 형태가 뚜렷해집니다">패스 점 추출 간격</label>
+      <input type="range" id="svgDensity" min="2" max="300" value="10" step="1" style="width:70px;margin-left:auto;">
+      <span id="svgDensityVal" style="font-size:10px;color:#aaa;width:32px;text-align:right">10px</span>
+    </div>
+    <input type="file" id="svgInput" accept=".svg" class="hidden">
+    <button class="btn btn-g" id="svgBtn" style="margin-bottom:6px; color:#ddd; border-color:#333;">📁 AI 순수 벡터 윤곽선 추출 (.svg 전용)</button>
+    <div class="hint" style="margin-top:4px;">불러온 파일의 선을 따라 지정된 간격으로 점을 생성합니다. 간격을 줄이면 점이 밀집되어 본래 형태가 잘 보입니다. 빈 캔버스에 추가될 때마다 누적됩니다.</div>
+  </div>
+
+  <div class="slider-row" style="border-top:1px solid #1c1c1c; padding-top:12px; margin-top:10px;">
+    <label>도형 크기 (반지름)</label>
+    <input type="range" id="gridSize" min="1" max="100" value="28" step="1">
+  </div>
+  
+  <div class="slider-row" style="margin-top:6px;">
+    <label style="color:#fbb">내부 침범률</label>
+    <input type="range" id="inwardSlider" min="0" max="100" value="30" step="1" title="비선형적으로 형태 내부로 증식하는 비율">
+    <span id="inwardVal" style="font-size:10px;color:#aaa;width:32px;text-align:right">30%</span>
+  </div>
+
+  <div class="slider-row" style="margin-top:6px;">
+    <label style="color:#bfb">증식 속도</label>
+    <input type="range" id="speedSlider" min="0" max="6" value="3.5" step="0.1">
+  </div>
+
+  <div class="slider-row" style="margin-top:6px; border-top:1px solid #1c1c1c; padding-top:12px;">
+    <label style="color:#ddd" title="증식된 형태의 면 불투명도를 결정합니다">면 투명도</label>
+    <input type="range" id="faceOpacity" min="0" max="100" value="75" step="1">
+    <span id="faceOpacityVal" style="font-size:10px;color:#aaa;width:32px;text-align:right">75%</span>
+  </div>
+  <div class="slider-row" style="margin-top:6px;">
+    <label style="color:#ddd" title="증식된 형태의 외곽선/선의 불투명도를 결정합니다">선 투명도</label>
+    <input type="range" id="lineOpacity" min="0" max="100" value="30" step="1">
+    <span id="lineOpacityVal" style="font-size:10px;color:#aaa;width:32px;text-align:right">30%</span>
+  </div>
+
+  <div id="postActionPanel" class="hidden" style="margin-top:10px; border-top:1px solid #1c1c1c; padding-top:12px; margin-bottom:10px;">
+    <div class="lbl">후반 작업 도구 (지우기 / 색칠)</div>
+    <div class="row" style="margin-bottom:8px;">
+        <label style="font-size:11px;color:#ddd;margin-right:auto;cursor:pointer;"><input type="radio" name="toolMode" value="erase" checked> 지우개</label>
+        <label style="font-size:11px;color:#ddd;cursor:pointer;"><input type="radio" name="toolMode" value="paint"> 브러쉬 색칠</label>
+    </div>
+    <div class="row" id="brushColorRow" style="opacity:0.3;pointer-events:none;">
+        <label style="font-size:11px;font-weight:600;color:#ddd">색상 (클릭하여 변경)</label>
+        <input type="color" id="brushColor" value="#ff3366" style="margin-left:auto; width:40px; height:24px; border:none; background:none;">
+    </div>
+    
+    <div style="border-top:1px dashed #333; margin-top:10px; padding-top:10px;">
+        <div class="lbl">전체 색상 덮어쓰기</div>
+        <div class="row">
+           <input type="color" id="globalColor" value="#ffffff" style="width:24px; height:24px; border:none; background:none; cursor:pointer;">
+           <button class="btn btn-g" id="globalColorBtn" style="padding:4px 8px; font-size:11px; margin-left:auto; width:auto; border-color:#333;">선택 색상으로 일괄 덮어쓰기</button>
+        </div>
+    </div>
+    
+    <div style="border-top:1px dashed #333; margin-top:10px; padding-top:10px;">
+        <div class="lbl">예시 이미지 & 레이어 제어</div>
+        <input type="file" id="bgImageInput" accept="image/*" class="hidden">
+        <button class="btn btn-g" id="bgImageBtn" style="padding:6px; font-size:11px; border-color:#333; margin-bottom:6px;">🖼️ 예시 이미지 로드</button>
+        
+        <div class="slider-row hidden" id="imgScaleRow" style="margin-top:2px;">
+            <label style="font-size:10px;color:#ddd">업로드 이미지 크기</label>
+            <input type="range" id="imgScaleSlider" min="10" max="300" value="100" step="1">
+        </div>
+        
+        <div style="margin-top:10px; padding:6px; background:#111; border-radius:5px; border:1px solid #1a1a1a;" id="layerControlBox">
+            <div style="font-size:10px; color:#aaa; margin-bottom:6px;">렌더링 순서 (위쪽이 배경, 아래쪽이 맨앞)</div>
+            <div id="layerList" style="display:flex; flex-direction:column; gap:4px;"></div>
+        </div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-w" id="startBtn" disabled>증식 시작 →</button>
+    <button class="btn btn-g hidden" id="saveBtn">594x841 A1 벡터화 캔버스 이미지 출력</button>
+    <button class="btn btn-g hidden" id="saveSvgBtn" style="color:#3af;">일러스트레이터용 순수 벡터(SVG) 추출</button>
+    <button class="btn btn-g hidden" id="editBtn" style="color:#e9a;">✎ 기점/설정 수정하기 (되돌아가기)</button>
+    <button class="btn btn-g" id="resetBtn">↺ 처음부터 다시 (전체 초기화)</button>
+  </div>
+</div>
+
+<div id="wrap">
+  <canvas id="cv"></canvas>
+  <div id="exportOverlay" class="hidden">
+    <div class="spinner"></div>
+    <div>A1 벡터 지오메트리 계산 중...</div>
+  </div>
+</div>
+
+<script>
+window.addEventListener('DOMContentLoaded', () => {
+
+const DEFAULT_COLORS = ['#FF2323','#1AAFFF','#FFD200','#9B1AFF','#0FDC73','#FF7800','#ffffff'];
+let colorIndex = 0;
+
+const wrap = document.getElementById('wrap');
+const cv   = document.getElementById('cv');
+const ctx  = cv.getContext('2d');
+
+const A1   = 841/594;
+const aw = wrap.clientWidth-40, ah = wrap.clientHeight-40;
+let CW, CH;
+if(ah/aw>=A1){CW=aw;CH=Math.round(aw*A1);}
+else{CH=ah;CW=Math.round(ah/A1);}
+cv.width=CW; cv.height=CH;
+
+function hexToRgb(h){ return[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)]; }
+
+function rotate3D(v, ax, ay, az) {
+  let cx = Math.cos(ax), sx = Math.sin(ax);
+  let cy = Math.cos(ay), sy = Math.sin(ay);
+  let cz = Math.cos(az), sz = Math.sin(az);
+  let x1 = v[0]*cz - v[1]*sz; let y1 = v[0]*sz + v[1]*cz; let z1 = v[2];
+  let x2 = x1*cy + z1*sy; let y2 = y1; let z2 = -x1*sy + z1*cy;
+  let x3 = x2; let y3 = y2*cx - z2*sx; let z3 = y2*sx + z2*cx;
+  return [x3, y3, z3];
+}
+
+function getGeometry(F) {
+   if(F<=1) return {v: [[0,0,0]], f: [[0]]};
+   if(F===2) return {v: [[-1,0,0], [1,0,0]], f: [[0,1]]};
+   if(F===3) return {v: [[0,-0.866,0], [1,0.866,0], [-1,0.866,0]], f: [[0,1,2]]};
+   // 정사면체
+   if(F===4) return {v: [[1,1,1], [1,-1,-1], [-1,1,-1], [-1,-1,1]], f: [[0,1,2], [0,3,1], [0,2,3], [1,3,2]]};
+   // 정오면체 대체 (정사각뿔 - 가장 안정적인 5면체)
+   if(F===5) return {v: [[0,1,0], [1,-1,1], [-1,-1,1], [-1,-1,-1], [1,-1,-1]], f: [[0,1,2], [0,2,3], [0,3,4], [0,4,1], [1,4,3,2]]};
+   // 정육면체
+   if(F===6) return {v: [[1,1,1], [1,1,-1], [1,-1,1], [1,-1,-1], [-1,1,1], [-1,1,-1], [-1,-1,1], [-1,-1,-1]], f: [[0,1,3,2], [4,6,7,5], [0,4,5,1], [2,3,7,6], [0,2,6,4], [1,5,7,3]]};
+   // 정팔면체
+   if(F===7 || F===8) return {v: [[1,0,0], [-1,0,0], [0,1,0], [0,-1,0], [0,0,1], [0,0,-1]], f: [[0,2,4], [0,4,3], [0,3,5], [0,5,2], [1,4,2], [1,3,4], [1,5,3], [1,2,5]]};
+   
+   // 정이십면체 베이스 (반지름 1로 정규화하여 구 형태 분할 시 별이 되지 않고 완벽한 구를 이루도록 버그 수정)
+   let p = (1 + Math.sqrt(5)) / 2;
+   let rad = Math.sqrt(1 + p*p);
+   let iv = [
+     [-1/rad, p/rad, 0], [ 1/rad, p/rad, 0], [-1/rad,-p/rad, 0], [ 1/rad,-p/rad, 0],
+     [0, -1/rad, p/rad], [0,  1/rad, p/rad], [0, -1/rad,-p/rad], [0,  1/rad,-p/rad],
+     [p/rad, 0, -1/rad], [p/rad, 0,  1/rad], [-p/rad, 0,-1/rad], [-p/rad, 0,  1/rad]
+   ];
+   let i_f = [
+     [0, 11, 5], [0, 5, 1], [0, 1, 7], [0, 7, 10], [0, 10, 11],
+     [1, 5, 9], [5, 11, 4], [11, 10, 2], [10, 7, 6], [7, 1, 8],
+     [3, 9, 4], [3, 4, 2], [3, 2, 6], [3, 6, 8], [3, 8, 9],
+     [4, 9, 5], [2, 4, 11], [6, 2, 10], [8, 6, 7], [9, 8, 1]
+   ];
+
+   // 정십이면체 (정이십면체의 기하학적 쌍대, Dual)
+   if(F>=9 && F<=12) {
+       let dv=[];
+       for(let fi of i_f){
+           let cx=iv[fi[0]][0]+iv[fi[1]][0]+iv[fi[2]][0], cy=iv[fi[0]][1]+iv[fi[1]][1]+iv[fi[2]][1], cz=iv[fi[0]][2]+iv[fi[1]][2]+iv[fi[2]][2];
+           let l=Math.sqrt(cx*cx+cy*cy+cz*cz);
+           dv.push([cx/l, cy/l, cz/l]);
+       }
+       let df=[];
+       for(let i=0; i<12; i++){
+           let fc=[];
+           for(let j=0; j<20; j++) if(i_f[j].includes(i)) fc.push(j);
+           let n=iv[i], ref = Math.abs(n[0])<0.9?[1,0,0]:[0,1,0];
+           let ux=n[1]*ref[2]-n[2]*ref[1], uy=n[2]*ref[0]-n[0]*ref[2], uz=n[0]*ref[1]-n[1]*ref[0];
+           let ul=Math.sqrt(ux*ux+uy*uy+uz*uz); 
+           ux/=ul; uy/=ul; uz/=ul;
+           let vx=n[1]*uz-n[2]*uy, vy=n[2]*ux-n[0]*uz, vz=n[0]*uy-n[1]*ux;
+           fc.sort((a,b)=>{
+               let da=dv[a], db=dv[b];
+               let dxa=da[0]-n[0], dya=da[1]-n[1], dza=da[2]-n[2];
+               let dxb=db[0]-n[0], dyb=db[1]-n[1], dzb=db[2]-n[2];
+               return Math.atan2(dxa*vx+dya*vy+dza*vz, dxa*ux+dya*uy+dza*uz) - Math.atan2(dxb*vx+dyb*vy+dzb*vz, dxb*ux+dyb*uy+dzb*uz);
+           });
+           df.push(fc);
+       }
+       return {v: dv, f: df};
+   }
+   
+   if(F<=20) return {v: iv, f: i_f};
+   
+   // F 가 20을 넘어가는 초고밀도 교차의 경우: 면 분할 알고리즘(Subdivision) 가동
+   // 퍼포먼스를 위해 분할은 최대 3레벨 (1280면체)로 제한
+   let level = Math.min(3, Math.floor((F - 10) / 10)); 
+   let cache = {};
+   let nf = [...i_f];
+   function getMid(i1, i2) {
+       let key = i1 < i2 ? i1+"_"+i2 : i2+"_"+i1;
+       if(cache[key]) return cache[key];
+       let v1=iv[i1], v2=iv[i2];
+       let mx=(v1[0]+v2[0])/2, my=(v1[1]+v2[1])/2, mz=(v1[2]+v2[2])/2;
+       let len=Math.sqrt(mx*mx+my*my+mz*mz);
+       iv.push([mx/len, my/len, mz/len]);
+       cache[key] = iv.length - 1;
+       return cache[key];
+   }
+   for (let i=0; i<level; i++) {
+       let nextF = [];
+       for (let face of nf) {
+           let m1 = getMid(face[0], face[1]);
+           let m2 = getMid(face[1], face[2]);
+           let m3 = getMid(face[2], face[0]);
+           nextF.push([face[0], m1, m3]);
+           nextF.push([face[1], m2, m1]);
+           nextF.push([face[2], m3, m2]);
+           nextF.push([m1, m2, m3]);
+       }
+       nf = nextF;
+   }
+   return {v: iv, f: nf};
+}
+
+let phase='placing', items=[], selectedItem=-1;
+let sources=[], zones=[];
+let animID=null, curR=0;
+let polygons=[], queue=[];
+
+let uploadedImage = null;
+let imageScale = 1.0;
+let layerOrder = ['bg', 'image', 'fractal'];
+const layerNames = { bg: '가장 밑 배경 (검정)', image: '오버레이/별도 이미지', fractal: '증식된 3D 파티클' };
+
+function renderLayerUI() {
+    const list = document.getElementById('layerList');
+    if(!list) return;
+    list.innerHTML = '';
+    layerOrder.forEach((lyr, i) => {
+        let el = document.createElement('div');
+        el.style.cssText = 'display:flex; align-items:center; background:#1a1a1a; padding:4px 8px; border-radius:4px; border:1px solid #222; font-size:10px; color:#ccc;';
+        el.innerHTML = `<span>${i+1}. ${layerNames[lyr]}</span>`;
+        
+        let upBtn = document.createElement('button');
+        upBtn.innerText = '▲'; 
+        upBtn.style.cssText = 'margin-left:auto; background:none; border:none; color:#888; cursor:pointer; font-size:10px; padding:2px 4px;';
+        upBtn.onclick = () => {
+            if(i>0) {
+                let tmp=layerOrder[i]; layerOrder[i]=layerOrder[i-1]; layerOrder[i-1]=tmp;
+                renderLayerUI();
+                if(phase==='done'||phase==='simulating') drawPolygons(ctx,1.0);
+            }
+        };
+        
+        let downBtn = document.createElement('button');
+        downBtn.innerText = '▼';
+        downBtn.style.cssText = 'background:none; border:none; color:#888; cursor:pointer; font-size:10px; padding:2px 4px;';
+        downBtn.onclick = () => {
+            if(i<layerOrder.length-1) {
+                let tmp=layerOrder[i]; layerOrder[i]=layerOrder[i+1]; layerOrder[i+1]=tmp;
+                renderLayerUI();
+                if(phase==='done'||phase==='simulating') drawPolygons(ctx,1.0);
+            }
+        };
+        
+        el.appendChild(upBtn); el.appendChild(downBtn);
+        list.appendChild(el);
+    });
+}
+
+function defaultZone(){
+  const c = DEFAULT_COLORS[colorIndex % DEFAULT_COLORS.length];
+  colorIndex++;
+  return { bgColor: c, startAngle: 0 };
+}
+
+// ── Recursive Fractal BFS Engine ──
+function startSim() {
+  polygons = []; queue = []; curR = 0;
+  let D = parseFloat(document.getElementById('gridSize').value);
+  let R = D / Math.sqrt(3);
+
+  sources = []; zones = [];
+  items.forEach(it => {
+      if(it.type === 'point') {
+          sources.push({cx: it.cx, cy: it.cy});
+          zones.push({bgColor: it.bgColor, startAngle: it.startAngle});
+      } else if (it.type === 'svg') {
+          it.points.forEach((p, idx) => {
+              let dx = p.dx, dy = p.dy;
+              let s_factor = (it.scale !== undefined ? it.scale : 100) / 100;
+              dx *= s_factor;
+              dy *= s_factor;
+              if (it.rotation) {
+                  let r = it.rotation * Math.PI / 180;
+                  let c = Math.cos(r), s = Math.sin(r);
+                  let nx = dx * c - dy * s;
+                  let ny = dx * s + dy * c;
+                  dx = nx; dy = ny;
+              }
+              sources.push({cx: it.cx + dx, cy: it.cy + dy, parentCx: it.cx, parentCy: it.cy});
+              let c = it.bgColor ? it.bgColor : p.color;
+              zones.push({bgColor: c, startAngle: it.startAngle + (idx*15)%360});
+          });
+      }
+  });
+
+  sources.forEach((s, i) => {
+     let F = 1; // 0차원 점부터 시작
+     let z = zones[i];
+     let baseAngle = -Math.PI/2 + (z.startAngle * Math.PI / 180); 
+     
+     let poly = {
+        cx: s.cx, cy: s.cy,
+        F: F, depth: 0, R: R, baseAngle: baseAngle,
+        rotOffset: [Math.random()*Math.PI*2, Math.random()*Math.PI*2, Math.random()*Math.PI*2],
+        color: hexToRgb(z.bgColor),
+        birthR: 0
+     };
+     polygons.push(poly);
+     
+     let numRays = 3; // 토폴로지 유지를 위한 방향
+     for(let v=0; v<numRays; v++){
+        let vAng = baseAngle + v * (2*Math.PI/numRays);
+        let vx = s.cx + R * Math.cos(vAng);
+        let vy = s.cy + R * Math.sin(vAng);
+        queue.push({
+           vx: vx, vy: vy, vAng: vAng,
+           rootIdx: i, dist: R, depth: 0
+        });
+     }
+  });
+}
+
+function updateSim() {
+    let speed = parseFloat(document.getElementById('speedSlider').value) * 10;
+    if(speed===0) return;
+    
+    curR += speed;
+    let D = parseFloat(document.getElementById('gridSize').value);
+    let R = D / Math.sqrt(3);
+    
+    let toRemove = [];
+    let newItems = [];
+    
+    for(let i=0; i<queue.length; i++){
+        let q = queue[i];
+        if(q.dist <= curR) {
+            toRemove.push(i);
+            
+            let cx = q.vx + R * Math.cos(q.vAng);
+            let cy = q.vy + R * Math.sin(q.vAng);
+            
+            if(cx < -R*2 || cy < -R*2 || cx > CW+R*2 || cy > CH+R*2) continue;
+            
+            // --- 내부 침범 억제 (Inward Guard) ---
+            let rootSource = sources[q.rootIdx];
+            if(rootSource.parentCx !== undefined) {
+                let dx1 = cx - rootSource.parentCx, dy1 = cy - rootSource.parentCy;
+                let dx2 = rootSource.cx - rootSource.parentCx, dy2 = rootSource.cy - rootSource.parentCy;
+                let d1 = Math.sqrt(dx1*dx1 + dy1*dy1);
+                let d2 = Math.max(0.001, Math.sqrt(dx2*dx2 + dy2*dy2));
+                
+                if (d1 < d2) {
+                   let inwardSliderEl = document.getElementById('inwardSlider');
+                   let inwardP = inwardSliderEl ? parseFloat(inwardSliderEl.value) / 100 : 0.3;
+                   if (inwardP < 1.0) {
+                       let depthRatio = d1 / d2;
+                       let exponent = 2 + (1 - inwardP) * 10;
+                       let chance = Math.pow(depthRatio, exponent);
+                       if (depthRatio < (1 - inwardP)) chance = 0;
+                       
+                       if (Math.random() > chance) {
+                           continue;
+                       }
+                   }
+                }
+            }
+            // ---------------------------------
+            
+            let collide = false;
+            for(let j=0; j<polygons.length; j++){
+               let p = polygons[j];
+               let dx = p.cx - cx; let dy = p.cy - cy;
+               if(dx*dx + dy*dy < (1.95*R) * (1.95*R)) { 
+                  collide = true; break;
+               }
+            }
+            if(collide) continue;
+            
+            let d1=Infinity, d2=Infinity, o1=-1, o2=-1;
+            for(let s=0; s<sources.length; s++){
+                let dx = cx - sources[s].cx; let dy = cy - sources[s].cy;
+                let dst = Math.sqrt(dx*dx + dy*dy);
+                if(dst < d1) { d2=d1; o2=o1; d1=dst; o1=s; }
+                else if(dst < d2) { d2=dst; o2=s; }
+            }
+            
+            let parentDepth = q.depth;
+            let childDepth = parentDepth + 1;
+            
+            // 사용자 요청: 방해 요소가 없으면 선(2) 상태 유지. 충돌시에만 차원 상승.
+            let F = 2; 
+            
+            let c1 = hexToRgb(zones[o1].bgColor);
+            let fR = c1[0], fG = c1[1], fB = c1[2];
+            
+            if(o2 >= 0) {
+                let mixRatio = d1 / Math.max(0.1, d2); 
+                
+                // 두 기점 간 거리가 가까워져(0.4 이상) 충돌 영역에 들어선 경우 폭발적으로 입체 진화
+                if (mixRatio > 0.4) {
+                    let collisionFactor = (mixRatio - 0.4) / 0.6; // 0.0 ~ 1.0 범위
+                    let sideAdd = Math.floor(Math.pow(collisionFactor, 1.5) * 8); 
+                    F += sideAdd;
+                }
+                
+                let t = mixRatio * 0.5;
+                let c2 = hexToRgb(zones[o2].bgColor);
+                fR = fR*(1-t) + c2[0]*t; fG = fG*(1-t) + c2[1]*t; fB = fB*(1-t) + c2[2]*t;
+            }
+            
+            let childBaseAng = q.vAng + Math.PI;
+            
+            let poly = {
+                cx, cy, F, depth: childDepth, R, baseAngle: childBaseAng,
+                rotOffset: [Math.random()*Math.PI*2, Math.random()*Math.PI*2, Math.random()*Math.PI*2],
+                color: [Math.round(fR), Math.round(fG), Math.round(fB)],
+                birthR: curR
+            };
+            polygons.push(poly);
+            
+            let numRays = 3;
+            for(let v=1; v<numRays; v++){
+                let vAng = childBaseAng + v * (2*Math.PI/numRays);
+                let vx = cx + R * Math.cos(vAng);
+                let vy = cy + R * Math.sin(vAng);
+                
+                let root = sources[q.rootIdx];
+                let distToRoot = Math.sqrt(Math.pow(vx - root.cx, 2) + Math.pow(vy - root.cy, 2));
+                
+                newItems.push({
+                   vAng: vAng, vx: vx, vy: vy,
+                   rootIdx: q.rootIdx,
+                   dist: distToRoot,
+                   depth: childDepth
+                });
+            }
+        }
+    }
+    for(let i=toRemove.length-1; i>=0; i--) queue.splice(toRemove[i], 1);
+    queue.push(...newItems);
+}
+
+function drawPolygons(dc, scale) {
+    dc.clearRect(0,0,CW*scale,CH*scale);
+    
+    let faceOpEl = document.getElementById('faceOpacity');
+    let lineOpEl = document.getElementById('lineOpacity');
+    let faceOp = faceOpEl ? parseFloat(faceOpEl.value) / 100 : 0.75;
+    let lineOp = lineOpEl ? parseFloat(lineOpEl.value) / 100 : 0.3;
+    
+    for (let layer of layerOrder) {
+        if (layer === 'bg') {
+            dc.fillStyle = '#0d0d0d';
+            dc.fillRect(0,0,CW*scale,CH*scale);
+        } else if (layer === 'image') {
+            if (uploadedImage) {
+                let imgW = uploadedImage.width * imageScale * scale;
+                let imgH = uploadedImage.height * imageScale * scale;
+                let ix = (CW*scale - imgW) / 2;
+                let iy = (CH*scale - imgH) / 2;
+                dc.drawImage(uploadedImage, ix, iy, imgW, imgH);
+            }
+        } else if (layer === 'fractal') {
+            for(let p of polygons) {
+                let geom = getGeometry(p.F);
+                let maxD = 0;
+                for(let vi of geom.v) {
+                    let d = Math.sqrt(vi[0]*vi[0] + vi[1]*vi[1] + vi[2]*vi[2]);
+                    if(d > maxD) maxD = d;
+                }
+                if(maxD === 0) maxD = 1;
+                
+                let currentR = p.R;
+                let age = curR - p.birthR;
+                if(age < p.R * 3) {
+                    let rT = Math.max(0.01, age / (p.R*3));
+                    let pScale = 1.0 - Math.pow(1.0 - rT, 3);
+                    currentR = p.R * pScale;
+                }
+                
+                let SR = currentR * scale;
+                let cx = p.cx * scale, cy = p.cy * scale;
+                
+                let tRot = curR * 0.01;
+                let ax = p.rotOffset[0] + tRot * 1.5;
+                let ay = p.rotOffset[1] + tRot * 2.0;
+                let az = p.rotOffset[2] + tRot * 1.0;
+                
+                let projV = [];
+                for(let vi of geom.v) {
+                    let nv = [vi[0]/maxD, vi[1]/maxD, vi[2]/maxD];
+                    let rv = rotate3D(nv, ax, ay, az);
+                    projV.push({ x: cx + rv[0] * SR, y: cy + rv[1] * SR, z: rv[2] });
+                }
+                
+                let facesToDraw = [];
+                for(let fi of geom.f) {
+                    let zSum = 0;
+                    for(let fidx of fi) zSum += projV[fidx].z;
+                    facesToDraw.push({ indices: fi, z: zSum / fi.length });
+                }
+                facesToDraw.sort((a,b) => a.z - b.z);
+                
+                for(let f of facesToDraw) {
+                    let v0 = projV[f.indices[0]];
+                    let v1 = projV[f.indices[1]] || v0;
+                    let v2 = projV[f.indices[f.indices.length-1]] || v0;
+                    
+                    let dx1 = v1.x - v0.x; let dy1 = v1.y - v0.y; let dz1 = v1.z - v0.z;
+                    let dx2 = v2.x - v0.x; let dy2 = v2.y - v0.y; let dz2 = v2.z - v0.z;
+                    let nx = dy1*dz2 - dz1*dy2;
+                    let ny = dz1*dx2 - dx1*dz2;
+                    let nz = dx1*dy2 - dy1*dx2;
+                    let nLen = Math.sqrt(nx*nx + ny*ny + nz*nz);
+                    let nzNorm = nLen === 0 ? 1 : nz / nLen;
+                    
+                    let light = 0.5 + 0.5 * Math.abs(nzNorm);
+                    let baseColor = p.color;
+                    let r = Math.min(255, Math.max(0, Math.round(baseColor[0] * light)));
+                    let g = Math.min(255, Math.max(0, Math.round(baseColor[1] * light)));
+                    let b = Math.min(255, Math.max(0, Math.round(baseColor[2] * light)));
+                    
+                    if(p.F <= 1) { // 점
+                        dc.fillStyle = `rgb(${r},${g},${b})`;
+                        dc.beginPath(); dc.arc(v0.x, v0.y, SR*0.2, 0, Math.PI*2); dc.fill();
+                    } else if(p.F === 2) { // 선
+                        dc.strokeStyle = `rgba(${r},${g},${b}, ${Math.max(0.1, lineOp)})`;
+                        dc.lineWidth = 1.5 * scale;
+                        dc.beginPath(); dc.moveTo(v0.x, v0.y); dc.lineTo(v1.x, v1.y); dc.stroke();
+                    } else { // 입체
+                        dc.fillStyle = `rgba(${r},${g},${b}, ${faceOp})`;
+                        dc.strokeStyle = `rgba(255, 255, 255, ${lineOp})`; 
+                        dc.lineWidth = 1.0 * scale;
+                        
+                        dc.beginPath();
+                        for(let i=0; i<f.indices.length; i++){
+                            let pt = projV[f.indices[i]];
+                            if(i===0) dc.moveTo(pt.x, pt.y); else dc.lineTo(pt.x, pt.y);
+                        }
+                        dc.closePath();
+                        dc.fill(); dc.stroke();
+                    }
+                }
+            }
+        }
+    }
+}
+
+function loop(){
+  if (phase === 'simulating') {
+      updateSim();
+      drawPolygons(ctx, 1.0);
+      
+      if(queue.length === 0) {
+          phase='done';
+          document.getElementById('stTxt').textContent='3단계: 완료 (드래그하여 부분 지우기/색칠 가능)';
+          document.getElementById('saveBtn').classList.remove('hidden');
+          document.getElementById('saveSvgBtn').classList.remove('hidden');
+          document.getElementById('postActionPanel').classList.remove('hidden');
+          document.getElementById('startBtn').innerText = '완료됨';
+      } else {
+          animID = requestAnimationFrame(loop);
+      }
+  }
+}
+
+document.getElementById('startBtn').addEventListener('click',()=>{
+  if(phase==='placing') {
+     if(getTotalPoints()<2)return;
+     phase='simulating';
+     document.getElementById('stTxt').textContent='2단계: 규칙 기반 꼭지점 점식 중...';
+     document.getElementById('startBtn').disabled=true;
+     document.getElementById('secPlace').classList.add('hidden');
+     document.getElementById('editBtn').classList.remove('hidden');
+     startSim();
+     animID=requestAnimationFrame(loop);
+  }
+});
+
+function getTotalPoints() {
+    let t = 0;
+    items.forEach(it => { t += it.type==='svg' ? it.points.length : 1; });
+    return t;
+}
+
+function updatePlacing(){
+  const list=document.getElementById('srcList');
+  const hint=document.getElementById('hint');
+  list.innerHTML='';
+  
+  if(phase==='placing'){
+    hint.textContent=items.length===0?'캔버스를 클릭해 점을 배치하거나 SVG를 업로드하세요. 캔버스 위에서 드래그하여 옮길 수 있습니다.':`${getTotalPoints()}개 기점 고정 (드래그로 이동 가능) — [증식 시작]을 누르면 진화합니다.`;
+  }
+
+  items.forEach((it,i)=>{
+    const el=document.createElement('div');
+    el.className='srow'+(selectedItem===i?' sel':'');
+    
+    let c = it.bgColor || '#ffffff';
+    let name = it.type === 'svg' ? `SVG 외곽선 그룹 (${it.points.length}점)` : `기하학 씨앗 ${i+1}`;
+    
+    el.innerHTML=`<div class="sdot" style="background-color:${c};border-radius:0;"></div>
+                  <span class="sname">${name}</span>`;
+                  
+    let delBtn = document.createElement('span');
+    delBtn.innerText = '삭제';
+    delBtn.style.cssText = 'color:#f55;font-size:11px;cursor:pointer;margin-left:auto;padding:4px;';
+    delBtn.onclick = (e) => {
+        e.stopPropagation();
+        items.splice(i, 1);
+        if(selectedItem === i) {
+            selectedItem = -1;
+            document.getElementById('zoneEditorColorOnly').classList.add('hidden');
+        } else if(selectedItem > i) {
+            selectedItem--;
+        }
+        updatePlacing();
+        drawDots();
+    };
+    el.appendChild(delBtn);
+    
+    el.onclick=()=>selectZone(i);
+    list.appendChild(el);
+  });
+  
+  if(phase==='placing') {
+    document.getElementById('startBtn').disabled=getTotalPoints()<2;
+    if(items.length>0 && document.getElementById('zoneEditorColorOnly').classList.contains('hidden')){
+      document.getElementById('zoneEditorColorOnly').classList.remove('hidden');
+    }
+  }
+}
+
+function selectZone(i){
+  selectedItem=i;
+  const it=items[i];
+  if(phase==='placing') {
+      let bCol = it.bgColor;
+      if(it.type === 'svg' && !bCol) bCol = '#ffffff';
+      document.getElementById('zBgColorOnly').value=bCol;
+      document.getElementById('zStartAngle').value=it.startAngle || 0;
+      document.getElementById('zAngleVal').innerText=(it.startAngle || 0) + '°';
+      
+      if(it.type === 'svg') {
+          document.getElementById('rowGroupRotation').classList.remove('hidden');
+          document.getElementById('rowGroupScale').classList.remove('hidden');
+          document.getElementById('zRotation').value = it.rotation || 0;
+          document.getElementById('zRotationVal').innerText = (it.rotation || 0) + '°';
+          document.getElementById('zScale').value = it.scale !== undefined ? it.scale : 100;
+          document.getElementById('zScaleVal').innerText = (it.scale !== undefined ? it.scale : 100) + '%';
+      } else {
+          document.getElementById('rowGroupRotation').classList.add('hidden');
+          document.getElementById('rowGroupScale').classList.add('hidden');
+      }
+  }
+  updatePlacing();
+}
+
+document.getElementById('zBgColorOnly').oninput = (e) => {
+  if(selectedItem<0)return;
+  items[selectedItem].bgColor = e.target.value;
+  updatePlacing();
+  drawDots();
+};
+
+document.getElementById('zStartAngle').addEventListener('input', (e) => {
+  if(selectedItem<0)return;
+  const val = parseInt(e.target.value);
+  items[selectedItem].startAngle = val;
+  document.getElementById('zAngleVal').innerText=val + '°';
+  drawDots();
+});
+
+document.getElementById('zRotation').addEventListener('input', (e) => {
+  if(selectedItem<0)return;
+  const val = parseInt(e.target.value);
+  items[selectedItem].rotation = val;
+  document.getElementById('zRotationVal').innerText=val + '°';
+  drawDots();
+});
+
+document.getElementById('zScale').addEventListener('input', (e) => {
+  if(selectedItem<0)return;
+  const val = parseInt(e.target.value);
+  items[selectedItem].scale = val;
+  document.getElementById('zScaleVal').innerText=val + '%';
+  drawDots();
+});
+
+function drawDots(){
+  if(phase!=='placing') return;
+  ctx.fillStyle='#0f0f0f'; ctx.fillRect(0,0,CW,CH);
+  
+  let D = parseFloat(document.getElementById('gridSize').value);
+  let R = D / Math.sqrt(3);
+
+  items.forEach((it,i)=>{
+    let isSelected = i === selectedItem;
+    if (it.type === 'point') {
+        const col=it.bgColor||'#fff';
+        ctx.shadowBlur = isSelected ? 20 : 10;
+        ctx.shadowColor=col;
+        ctx.fillStyle=col;
+        ctx.beginPath();
+        ctx.arc(it.cx, it.cy, R*0.2, 0, Math.PI*2);
+        ctx.fill();
+        ctx.shadowBlur=0;
+        
+        ctx.fillStyle='#111'; ctx.font='bold 10px sans-serif';
+        ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(i+1,it.cx,it.cy);
+        
+        if(isSelected) {
+            ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(it.cx, it.cy, R*0.4, 0, Math.PI*2); ctx.stroke();
+        }
+    } else if (it.type === 'svg') {
+        ctx.shadowBlur = isSelected ? 15 : 0;
+        ctx.shadowColor = '#444';
+        
+        let s_factor = (it.scale !== undefined ? it.scale : 100) / 100;
+        if(isSelected) {
+            ctx.save();
+            ctx.translate(it.cx, it.cy);
+            if(it.rotation) ctx.rotate(it.rotation * Math.PI / 180);
+            ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([4, 4]);
+            let scaledW = it.w * s_factor;
+            let scaledH = it.h * s_factor;
+            ctx.strokeRect(-scaledW/2, -scaledH/2, scaledW, scaledH);
+            ctx.restore();
+        }
+
+        it.points.forEach(p => {
+            let col = it.bgColor ? it.bgColor : p.color;
+            ctx.fillStyle = col;
+            
+            let dx = p.dx * s_factor, dy = p.dy * s_factor;
+            if(it.rotation) {
+                let r = it.rotation * Math.PI / 180;
+                let c = Math.cos(r), s = Math.sin(r);
+                let nx = dx * c - dy * s;
+                let ny = dx * s + dy * c;
+                dx = nx; dy = ny;
+            }
+
+            ctx.beginPath();
+            ctx.arc(it.cx + dx, it.cy + dy, 2, 0, Math.PI*2);
+            ctx.fill();
+        });
+        ctx.shadowBlur = 0;
+        
+        ctx.fillStyle='#fff'; ctx.font='bold 12px sans-serif';
+        ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('SVG', it.cx, it.cy);
+    }
+  });
+}
+
+function goBack(){
+  if(animID)cancelAnimationFrame(animID);
+  animID=null;
+  phase='placing';
+  sources=[]; zones=[];
+  polygons=[]; queue=[]; curR=0;
+  
+  document.getElementById('stTxt').textContent='1단계: 씨앗(0차원 점) 셋업';
+  document.getElementById('secPlace').classList.remove('hidden');
+  document.getElementById('saveBtn').classList.add('hidden');
+  document.getElementById('saveSvgBtn').classList.add('hidden');
+  document.getElementById('editBtn').classList.add('hidden');
+  document.getElementById('postActionPanel').classList.add('hidden');
+  document.getElementById('startBtn').disabled=(getTotalPoints()<2);
+  document.getElementById('startBtn').innerText='증식 시작 →';
+  
+  ctx.fillStyle='#0d0d0d'; ctx.fillRect(0,0,CW,CH);
+  updatePlacing();
+  drawDots();
+}
+
+function reset(){
+  if(animID)cancelAnimationFrame(animID);
+  animID=null;phase='placing';items=[];selectedItem=-1;
+  sources=[]; zones=[];
+  polygons=[]; queue=[]; curR=0;
+  colorIndex = 0;
+  
+  document.getElementById('stTxt').textContent='1단계: 씨앗(0차원 점) 셋업';
+  document.getElementById('secPlace').classList.remove('hidden');
+  document.getElementById('saveBtn').classList.add('hidden');
+  document.getElementById('saveSvgBtn').classList.add('hidden');
+  document.getElementById('editBtn').classList.add('hidden');
+  document.getElementById('postActionPanel').classList.add('hidden');
+  document.getElementById('zoneEditorColorOnly').classList.add('hidden');
+  document.getElementById('startBtn').disabled=true;
+  document.getElementById('startBtn').innerText='증식 시작 →';
+  
+  ctx.fillStyle='#0d0d0d'; ctx.fillRect(0,0,CW,CH);
+  updatePlacing();
+}
+
+let isDragging = false;
+let isInteracting = false;
+let dragTarget = null;
+let dragOffsetX = 0, dragOffsetY = 0;
+
+function interactPolygonsAt(mx, my) {
+    let modeEl = document.querySelector('input[name="toolMode"]:checked');
+    let mode = modeEl ? modeEl.value : 'erase';
+    let bColStr = document.getElementById('brushColor').value;
+    let bRgb = hexToRgb(bColStr);
+
+    let changed = false;
+    for(let i=polygons.length-1; i>=0; i--) {
+        let p = polygons[i];
+        let dx = p.cx - mx;
+        let dy = p.cy - my;
+        let radius = Math.max(15, p.R); 
+        if(dx*dx + dy*dy < radius * radius) {
+            if (mode === 'erase') {
+                polygons.splice(i, 1);
+                changed = true;
+            } else if (mode === 'paint') {
+                p.color = bRgb;
+                changed = true;
+            }
+        }
+    }
+    if (changed) drawPolygons(ctx, 1.0);
+}
+
+cv.addEventListener('mousedown', e => {
+  const rect = cv.getBoundingClientRect();
+  const mx = (e.clientX - rect.left) * CW / rect.width;
+  const my = (e.clientY - rect.top) * CH / rect.height;
+
+  if (phase === 'done' || phase === 'simulating') {
+      isInteracting = true;
+      interactPolygonsAt(mx, my);
+      return;
+  }
+
+  if(phase !== 'placing') return;
+
+  for(let i=items.length-1; i>=0; i--) {
+     let it = items[i];
+     if(it.type === 'point') {
+        let dx = mx - it.cx; let dy = my - it.cy;
+        if(dx*dx + dy*dy < 400) { 
+           dragTarget = it;
+           dragOffsetX = dx; dragOffsetY = dy;
+           isDragging = true;
+           selectZone(i);
+           return;
+        }
+     } else if (it.type === 'svg') {
+        let s_factor = (it.scale !== undefined ? it.scale : 100) / 100;
+        let halfW = (it.w * s_factor)/2, halfH = (it.h * s_factor)/2;
+        if(mx >= it.cx - halfW && mx <= it.cx + halfW && my >= it.cy - halfH && my <= it.cy + halfH) {
+           dragTarget = it;
+           dragOffsetX = mx - it.cx;
+           dragOffsetY = my - it.cy;
+           isDragging = true;
+           selectZone(i);
+           return;
+        }
+     }
+  }
+
+  items.push({
+     type: 'point',
+     cx: mx, cy: my,
+     bgColor: DEFAULT_COLORS[colorIndex % DEFAULT_COLORS.length],
+     startAngle: 0
+  });
+  colorIndex++;
+  selectZone(items.length - 1);
+  drawDots();
+});
+
+cv.addEventListener('mousemove', e => {
+  const rect = cv.getBoundingClientRect();
+  const mx = (e.clientX - rect.left) * CW / rect.width;
+  const my = (e.clientY - rect.top) * CH / rect.height;
+
+  if ((phase === 'done' || phase === 'simulating') && isInteracting) {
+      interactPolygonsAt(mx, my);
+      return;
+  }
+
+  if(!isDragging || !dragTarget || phase !== 'placing') return;
+
+  dragTarget.cx = mx - dragOffsetX;
+  dragTarget.cy = my - dragOffsetY;
+  drawDots();
+});
+
+window.addEventListener('mouseup', () => {
+  isDragging = false;
+  isInteracting = false;
+  dragTarget = null;
+});
+
+// A1 PNG Legacy
+document.getElementById('saveBtn').addEventListener('click',()=>{
+  document.getElementById('exportOverlay').classList.remove('hidden');
+  document.getElementById('saveBtn').disabled = true;
+
+  setTimeout(() => {
+    try {
+      const W = 7016; const H = 9933; const SCALE = W / CW; 
+      const exp = document.createElement('canvas');
+      exp.width = W; exp.height = H;
+      drawPolygons(exp.getContext('2d'), SCALE);
+      
+      exp.toBlob(blob => {
+         const url = URL.createObjectURL(blob);
+         const a = document.createElement('a');
+         a.download = 'Generative-Crystals-A1.png';
+         a.href = url; a.click();
+         document.getElementById('exportOverlay').classList.add('hidden');
+         document.getElementById('saveBtn').disabled = false;
+      }, 'image/png');
+    } catch(e) {
+      alert("출력 오류가 발생했습니다.");
+      document.getElementById('exportOverlay').classList.add('hidden');
+      document.getElementById('saveBtn').disabled = false;
+    }
+  }, 100);
+});
+
+// Illustrator Pure Vector (SVG) Export
+document.getElementById('saveSvgBtn').addEventListener('click', () => {
+    let faceOpEl = document.getElementById('faceOpacity');
+    let lineOpEl = document.getElementById('lineOpacity');
+    let faceOp = faceOpEl ? parseFloat(faceOpEl.value) / 100 : 0.75;
+    let lineOp = lineOpEl ? parseFloat(lineOpEl.value) / 100 : 0.3;
+
+    let svgStr = `<?xml version="1.0" encoding="utf-8"?>\n`;
+    svgStr += `<svg xmlns="http://www.w3.org/2000/svg" width="${CW}" height="${CH}" viewBox="0 0 ${CW} ${CH}">\n`;
+    
+    for(let layer of layerOrder) {
+        if(layer === 'bg') {
+            svgStr += `  <rect width="${CW}" height="${CH}" fill="#0d0d0d"/>\n`;
+        } else if(layer === 'image') {
+            if(uploadedImage) {
+                let imgW = uploadedImage.width * imageScale;
+                let imgH = uploadedImage.height * imageScale;
+                let ix = (CW - imgW) / 2;
+                let iy = (CH - imgH) / 2;
+                svgStr += `  <image href="${uploadedImage.src}" x="${ix.toFixed(2)}" y="${iy.toFixed(2)}" width="${imgW.toFixed(2)}" height="${imgH.toFixed(2)}" preserveAspectRatio="none" />\n`;
+            }
+        } else if(layer === 'fractal') {
+            for(let p of polygons) {
+               let geom = getGeometry(p.F);
+               let maxD = 0;
+               for(let vi of geom.v) {
+                   let d = Math.sqrt(vi[0]*vi[0] + vi[1]*vi[1] + vi[2]*vi[2]);
+                   if(d > maxD) maxD = d;
+               }
+               if(maxD === 0) maxD = 1;
+        
+               let currentR = p.R;
+               let age = curR - p.birthR;
+               if(age < p.R * 3) {
+                   let rT = Math.max(0.01, age / (p.R*3));
+                   let pScale = 1.0 - Math.pow(1.0 - rT, 3);
+                   currentR = p.R * pScale;
+               }
+               
+               let cx = p.cx, cy = p.cy;
+               let tRot = curR * 0.01;
+               let ax = p.rotOffset[0] + tRot * 1.5;
+               let ay = p.rotOffset[1] + tRot * 2.0;
+               let az = p.rotOffset[2] + tRot * 1.0;
+               
+               let projV = [];
+               for(let vi of geom.v) {
+                   let nv = [vi[0]/maxD, vi[1]/maxD, vi[2]/maxD];
+                   let rv = rotate3D(nv, ax, ay, az);
+                   projV.push({ x: cx + rv[0] * currentR, y: cy + rv[1] * currentR, z: rv[2] });
+               }
+               
+               let facesToDraw = [];
+               for(let fi of geom.f) {
+                   let zSum = 0;
+                   for(let fidx of fi) zSum += projV[fidx].z;
+                   facesToDraw.push({ indices: fi, z: zSum / fi.length });
+               }
+               facesToDraw.sort((a,b) => a.z - b.z);
+               
+               let baseColor = p.color;
+               
+               for(let f of facesToDraw) {
+                   let v0 = projV[f.indices[0]];
+                   let v1 = projV[f.indices[1]] || v0;
+                   let v2 = projV[f.indices[f.indices.length-1]] || v0;
+                   
+                   let dx1 = v1.x - v0.x; let dy1 = v1.y - v0.y; let dz1 = v1.z - v0.z;
+                   let dx2 = v2.x - v0.x; let dy2 = v2.y - v0.y; let dz2 = v2.z - v0.z;
+                   let nx = dy1*dz2 - dz1*dy2;
+                   let ny = dz1*dx2 - dx1*dz2;
+                   let nz = dx1*dy2 - dy1*dx2;
+                   let nLen = Math.sqrt(nx*nx + ny*ny + nz*nz);
+                   let nzNorm = nLen === 0 ? 1 : nz / nLen;
+                   
+                   let light = 0.5 + 0.5 * Math.abs(nzNorm);
+                   let r = Math.min(255, Math.max(0, Math.round(baseColor[0] * light)));
+                   let g = Math.min(255, Math.max(0, Math.round(baseColor[1] * light)));
+                   let b = Math.min(255, Math.max(0, Math.round(baseColor[2] * light)));
+                   
+                   if(p.F <= 1) {
+                      svgStr += `  <circle cx="${v0.x.toFixed(2)}" cy="${v0.y.toFixed(2)}" r="${(currentR*0.2).toFixed(2)}" fill="rgb(${r},${g},${b})" />\n`;
+                   } else if (p.F === 2) {
+                      svgStr += `  <line x1="${v0.x.toFixed(2)}" y1="${v0.y.toFixed(2)}" x2="${v1.x.toFixed(2)}" y2="${v1.y.toFixed(2)}" stroke="rgba(${r},${g},${b},${Math.max(0.1, lineOp)})" stroke-width="1.5" />\n`;
+                   } else {
+                      let pts = [];
+                      for(let idx of f.indices){
+                          pts.push(`${projV[idx].x.toFixed(2)},${projV[idx].y.toFixed(2)}`);
+                      }
+                      svgStr += `  <polygon points="${pts.join(' ')}" fill="rgb(${r},${g},${b})" fill-opacity="${faceOp}" stroke="white" stroke-opacity="${lineOp}" stroke-width="1.0" stroke-linejoin="round" />\n`;
+                   }
+               }
+            }
+        }
+    }
+    
+    svgStr += `</svg>`;
+    const blob = new Blob([svgStr], {type: "image/svg+xml"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.download = '3D-Fractal-Evolution.svg';
+    a.href = url; a.click();
+});
+
+document.getElementById('svgDensity').addEventListener('input', (e) => {
+    document.getElementById('svgDensityVal').innerText = e.target.value + 'px';
+});
+
+document.getElementById('inwardSlider')?.addEventListener('input', (e) => {
+    let valEl = document.getElementById('inwardVal');
+    if(valEl) valEl.innerText = e.target.value + '%';
+});
+
+document.getElementById('faceOpacity')?.addEventListener('input', (e) => {
+    let valEl = document.getElementById('faceOpacityVal');
+    if(valEl) valEl.innerText = e.target.value + '%';
+    if(phase === 'done' || phase === 'simulating') drawPolygons(ctx, 1.0);
+});
+
+document.getElementById('lineOpacity')?.addEventListener('input', (e) => {
+    let valEl = document.getElementById('lineOpacityVal');
+    if(valEl) valEl.innerText = e.target.value + '%';
+    if(phase === 'done' || phase === 'simulating') drawPolygons(ctx, 1.0);
+});
+
+document.getElementById('svgBtn').addEventListener('click', () => {
+    document.getElementById('svgInput').click();
+});
+
+document.getElementById('svgInput').addEventListener('change', e => {
+  if(!e.target.files[0]) return;
+  const file = e.target.files[0];
+  
+  if (file.name.toLowerCase().endsWith('.svg') === false) {
+      alert("SVG 파일만 지원됩니다! (일러스트레이터에서 외곽선 뼈대 추출 전용)");
+      e.target.value = '';
+      return;
+  }
+  
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+     let text = ev.target.result;
+     let parser = new DOMParser();
+     let doc = parser.parseFromString(text, 'image/svg+xml');
+     let svgEl = doc.querySelector('svg');
+     if(!svgEl) { alert('유효한 SVG 파일이 아닙니다.'); return; }
+     
+     svgEl.style.position = 'absolute';
+     svgEl.style.left = '-9999px';
+     svgEl.style.top = '-9999px';
+     svgEl.style.visibility = 'hidden';
+     svgEl.style.pointerEvents = 'none';
+     
+     document.body.appendChild(svgEl);
+     
+     requestAnimationFrame(() => {
+       try {
+         let cx = CW/2;
+         let cy = CH/2;
+         
+         const shapes = svgEl.querySelectorAll('path, circle, rect, line, polyline, polygon, ellipse');
+         
+         let globalPoints = [];
+         shapes.forEach(shape => {
+             let computedStyle = window.getComputedStyle(shape);
+             let colorStr = computedStyle.stroke !== 'none' ? computedStyle.stroke : 
+                            (computedStyle.fill !== 'none' ? computedStyle.fill : null);
+             let color = '#ffffff';
+             if (colorStr && colorStr.startsWith('rgb')) {
+                 let m = colorStr.match(/\d+/g);
+                 if (m && m.length >= 3) {
+                     let r = parseInt(m[0]), g = parseInt(m[1]), b = parseInt(m[2]);
+                     if (r < 30 && g < 30 && b < 30) color = '#ffffff'; 
+                     else color = '#' + ((1<<24) + (r<<16) + (g<<8) + b).toString(16).slice(1);
+                 }
+             }
+
+             let pts = [];
+             let density = parseFloat(document.getElementById('svgDensity').value) || 10;
+             let len = 0;
+             try { len = shape.getTotalLength(); } catch(e){}
+             
+             if (len > 0) {
+                 for(let i = 0; i <= len; i += density) {
+                     pts.push(shape.getPointAtLength(i));
+                 }
+                 if (len % density !== 0) pts.push(shape.getPointAtLength(len));
+             } else {
+                 if (shape.tagName === 'path') {
+                     let d = shape.getAttribute('d') || '';
+                     const commands = d.match(/[a-df-z][^a-df-z]*/ig) || [];
+                     let curX=0, curY=0;
+                     for(let cmdStr of commands){
+                         let cmd = cmdStr[0];
+                         let argsRegex = cmdStr.slice(1).match(/[+-]?(?:\d*\.\d+|\d+)(?:[eE][+-]?\d+)?/g) || [];
+                         let args = argsRegex.map(parseFloat);
+                         let isRel = cmd === cmd.toLowerCase();
+                         let upCmd = cmd.toUpperCase();
+                         if('MLT'.includes(upCmd)){
+                             for(let i=0; i<args.length; i+=2) {
+                                 if(isRel) { curX+=args[i]; curY+=args[i+1]; } else { curX=args[i]; curY=args[i+1]; }
+                                 pts.push({x:curX, y:curY});
+                             }
+                         } else if('H'===upCmd){
+                             for(let i=0; i<args.length; i++){ if(isRel) curX+=args[i]; else curX=args[i]; pts.push({x:curX, y:curY}); }
+                         } else if('V'===upCmd){
+                             for(let i=0; i<args.length; i++){ if(isRel) curY+=args[i]; else curY=args[i]; pts.push({x:curX, y:curY}); }
+                         } else if('C'===upCmd){
+                             for(let i=0; i<args.length; i+=6) {
+                                 if(isRel) { curX+=args[i+4]; curY+=args[i+5]; } else { curX=args[i+4]; curY=args[i+5]; }
+                                 pts.push({x:curX, y:curY});
+                             }
+                         } else if('S'===upCmd || 'Q'===upCmd){
+                             for(let i=0; i<args.length; i+=4) {
+                                 if(isRel) { curX+=args[i+2]; curY+=args[i+3]; } else { curX=args[i+2]; curY=args[i+3]; }
+                                 pts.push({x:curX, y:curY});
+                             }
+                         } else if('A'===upCmd){
+                             for(let i=0; i<args.length; i+=7) {
+                                 if(isRel) { curX+=args[i+5]; curY+=args[i+6]; } else { curX=args[i+5]; curY=args[i+6]; }
+                                 pts.push({x:curX, y:curY});
+                             }
+                         }
+                     }
+                 } else if (shape.tagName === 'polygon' || shape.tagName === 'polyline') {
+                     let ptsStr = shape.getAttribute('points') || '';
+                     let argsRegex = ptsStr.match(/[+-]?(?:\d*\.\d+|\d+)(?:[eE][+-]?\d+)?/g) || [];
+                     let pairs = argsRegex.map(parseFloat);
+                     for(let i=0; i<pairs.length; i+=2){
+                         pts.push({x: pairs[i], y: pairs[i+1]});
+                     }
+                 } else if (shape.tagName === 'line') {
+                     let x1 = parseFloat(shape.getAttribute('x1')||0), y1 = parseFloat(shape.getAttribute('y1')||0);
+                     let x2 = parseFloat(shape.getAttribute('x2')||0), y2 = parseFloat(shape.getAttribute('y2')||0);
+                     let dist = Math.hypot(x2-x1, y2-y1);
+                     for(let i=0; i<=dist; i+=density) {
+                         let t = i/dist;
+                         pts.push({x: x1 + (x2-x1)*t, y: y1 + (y2-y1)*t});
+                     }
+                     pts.push({x: x2, y: y2});
+                 } else if (shape.tagName === 'rect') {
+                     let x=parseFloat(shape.getAttribute('x')||0), y=parseFloat(shape.getAttribute('y')||0), w=parseFloat(shape.getAttribute('width')||0), h=parseFloat(shape.getAttribute('height')||0);
+                     pts.push({x:x, y:y}); pts.push({x:x+w, y:y}); pts.push({x:x+w, y:y+h}); pts.push({x:x, y:y+h});
+                 }
+             }
+             
+             let ctm = null;
+             try { ctm = shape.getCTM(); } catch(e){}
+             if(!ctm) ctm = svgEl.createSVGMatrix(); 
+             
+             for (let p of pts) {
+                 if (!isFinite(p.x) || !isFinite(p.y)) continue;
+                 let svgPt = svgEl.createSVGPoint();
+                 svgPt.x = p.x; svgPt.y = p.y;
+                 let globalPt = svgPt.matrixTransform(ctm);
+                 
+                 globalPoints.push({ x: globalPt.x, y: globalPt.y, color: color });
+             }
+         });
+         
+         if (globalPoints.length > 0) {
+             let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+             for (let p of globalPoints) {
+                 if(p.x < minX) minX = p.x;
+                 if(p.x > maxX) maxX = p.x;
+                 if(p.y < minY) minY = p.y;
+                 if(p.y > maxY) maxY = p.y;
+             }
+             
+             let rawW = maxX - minX;
+             let rawH = maxY - minY;
+             if (rawW === 0) rawW = 10;
+             if (rawH === 0) rawH = 10;
+
+             let scale = Math.min((CW*0.8)/rawW, (CH*0.8)/rawH);
+             if (!isFinite(scale) || scale === 0) scale = 1;
+             
+             let centerX = minX + rawW / 2;
+             let centerY = minY + rawH / 2;
+
+             let relativePoints = [];
+             for (let p of globalPoints) {
+                 relativePoints.push({
+                     dx: (p.x - centerX) * scale,
+                     dy: (p.y - centerY) * scale,
+                     color: p.color
+                 });
+             }
+
+             items.push({
+                 type: 'svg',
+                 cx: cx, cy: cy,
+                 w: rawW * scale, h: rawH * scale,
+                 points: relativePoints,
+                 bgColor: '',
+                 startAngle: 0,
+                 rotation: 0
+             });
+             selectZone(items.length - 1);
+         } else {
+             alert('SVG 내부에 추출 가능한 순수 벡터 선(패스/도형) 뼈대가 없습니다.\\n일러스트레이터에서 텍스트를 "윤곽선 만들기(Create Outlines)"하신 후 면을 지우고 선(Stroke) 형태로 저장해주세요.');
+         }
+         
+         svgEl.remove();
+         e.target.value = '';
+       } catch (err) {
+         alert("오류 발생: " + err.message);
+         e.target.value = '';
+         if(svgEl && svgEl.parentNode) svgEl.remove();
+       }
+     });
+  };
+  reader.readAsText(file);
+});
+
+document.getElementById('editBtn').addEventListener('click', goBack);
+document.getElementById('resetBtn').addEventListener('click',reset);
+
+document.getElementById('globalColorBtn').addEventListener('click', () => {
+    let gCol = document.getElementById('globalColor').value;
+    let gRgb = hexToRgb(gCol);
+    for(let p of polygons) {
+        p.color = gRgb;
+    }
+    if (phase === 'done' || phase === 'simulating') drawPolygons(ctx, 1.0);
+});
+
+document.getElementById('bgImageBtn').addEventListener('click', () => {
+    document.getElementById('bgImageInput').click();
+});
+
+document.getElementById('bgImageInput').addEventListener('change', e => {
+    if(!e.target.files[0]) return;
+    const file = e.target.files[0];
+    const reader = new FileReader();
+    reader.onload = ev => {
+        let img = new Image();
+        img.onload = () => {
+            uploadedImage = img;
+            let scaleW = CW / img.width;
+            let scaleH = CH / img.height;
+            imageScale = Math.max(scaleW, scaleH);
+            
+            document.getElementById('imgScaleSlider').value = 100;
+            document.getElementById('imgScaleRow').classList.remove('hidden');
+            
+            if (phase === 'done'|| phase === 'simulating') drawPolygons(ctx, 1.0);
+        };
+        img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+});
+
+document.getElementById('imgScaleSlider').addEventListener('input', e => {
+    if(!uploadedImage) return;
+    let percent = parseInt(e.target.value) / 100;
+    
+    let scaleW = CW / uploadedImage.width;
+    let scaleH = CH / uploadedImage.height;
+    let baseScale = Math.max(scaleW, scaleH);
+    
+    imageScale = baseScale * percent;
+    if (phase === 'done' || phase === 'simulating') drawPolygons(ctx, 1.0);
+});
+
+document.querySelectorAll('input[name="toolMode"]').forEach(radio => {
+    radio.addEventListener('change', (e) => {
+        if(e.target.value === 'paint') {
+            document.getElementById('brushColorRow').style.opacity = '1';
+            document.getElementById('brushColorRow').style.pointerEvents = 'auto';
+        } else {
+            document.getElementById('brushColorRow').style.opacity = '0.3';
+            document.getElementById('brushColorRow').style.pointerEvents = 'none';
+        }
+    });
+});
+
+ctx.fillStyle='#0f0f0f'; ctx.fillRect(0,0,CW,CH);
+updatePlacing();
+renderLayerUI();
+});
+</script>
+</body>
+</html>
