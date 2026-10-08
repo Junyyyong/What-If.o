@@ -37,6 +37,23 @@ const App: React.FC = () => {
     }
   };
 
+  const handleDownloadClick = () => {
+    const encoder = encoderRef.current;
+    if (!encoder) return;
+
+    // Flush the input debounce without changing the current rotation.
+    encoder.drawPattern(inputText);
+    const blob = new Blob([encoder.exportSvg()], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `HCMV-${new Date().toISOString().replace(/[:.]/g, '-')}.svg`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
+  };
+
   return (
     <div className="font-sans flex flex-col items-center justify-center min-h-screen box-border overflow-hidden bg-black touch-none">
       {/* 
@@ -79,6 +96,18 @@ const App: React.FC = () => {
           @[media(max-width:320px)]:h-[min(130vw,130vh)]
         `}
       />
+
+      <button
+        type="button"
+        className="download-button"
+        title="Download editable SVG"
+        aria-label="Download editable SVG"
+        onClick={handleDownloadClick}
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M12 3v12m-4-4 4 4 4-4M5 16v5h14v-5" />
+        </svg>
+      </button>
 
       <input
         type="text"

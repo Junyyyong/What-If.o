@@ -355,7 +355,9 @@ export class HexagonalEncoder {
             const rotatedZ2 = rotatedZ1 * cosX + y3D * sinX;
 
             const perspective = isMobile ? 400 : 800;
-            const scale = perspective / (perspective + rotatedZ2 + centerZ);
+            // Keep points crossing the camera plane finite on large touch displays.
+            const cameraDistance = Math.max(perspective * 0.05, perspective + rotatedZ2 + centerZ);
+            const scale = perspective / cameraDistance;
             const enhancedScale = Math.pow(scale, isMobile ? 1.4 : 1.2);
             
             const x3DFinal = this.center + rotatedX1 * enhancedScale;
@@ -443,7 +445,7 @@ export class HexagonalEncoder {
         }
     }
 
-    private drawTextPattern(text: string) {
+    private getTextPattern(text: string) {
         const hexString = this.textToHex(text);
         const points = [];
         const colors = [];
@@ -455,6 +457,69 @@ export class HexagonalEncoder {
             points.push(this.getVertexPoint(level, vertexIndex));
             colors.push(this.getColorCode(hexString, i));
         }
+
+        return { points, colors };
+    }
+
+    public exportSvg(): string {
+        // Use the live projection, including an in-progress 2D/3D transition.
+        const grid = Array.from({ length: 16 }, (_, level) =>
+            Array.from({ length: 6 }, (_, vertex) => this.getVertexPoint(level, vertex))
+        );
+        const { points, colors } = this.getTextPattern(this.currentText);
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        for (const [x, y] of grid.flat()) {
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, y);
+            maxX = Math.max(maxX, x);
+            maxY = Math.max(maxY, y);
+        }
+        const margin = Math.max(16, Math.max(maxX - minX, maxY - minY) / 8);
+        // Crop spare space, while keeping the same visible limits as the canvas.
+        minX = Math.max(0, minX - margin);
+        minY = Math.max(0, minY - margin);
+        maxX = Math.min(this.size, maxX + margin);
+        maxY = Math.min(this.size, maxY + margin);
+        const number = (value: number) => Number(value.toFixed(6)).toString();
+        const path = (vertices: [number, number][]) =>
+            `M ${vertices.map(([x, y]) => `${number(x)},${number(y)}`).join(' L ')} Z`;
+        const gradients: string[] = [];
+        const faces: string[] = [];
+
+        for (let i = 0; i < points.length - 2; i++) {
+            const [x1, y1] = points[i];
+            const [x2, y2] = points[i + 2];
+            const id = `gradient-${i + 1}`;
+            // Separate standard gradients keep each face editable in Illustrator.
+            gradients.push(
+                `<linearGradient id="${id}" gradientUnits="userSpaceOnUse" x1="${number(x1)}" y1="${number(y1)}" x2="${number(x2)}" y2="${number(y2)}">` +
+                colors.slice(i, i + 3).map((color, stop) =>
+                    `<stop offset="${stop / 2}" stop-color="${color}"/>`
+                ).join('') + '</linearGradient>'
+            );
+            faces.push(`<path id="Triangle-${i + 1}" d="${path(points.slice(i, i + 3))}" fill="url(#${id})" fill-opacity="0.8"/>`);
+        }
+
+        const x = number(minX);
+        const y = number(minY);
+        const w = number(maxX - minX);
+        const h = number(maxY - minY);
+        return [
+            '<?xml version="1.0" encoding="UTF-8"?>',
+            `<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="${w}" height="${h}" viewBox="${x} ${y} ${w} ${h}">`,
+            '<title>HCMV — Editable gradients</title>',
+            '<defs>', ...gradients, '</defs>',
+            `<g id="Background"><rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#000000"/></g>`,
+            '<g id="Hexagon-grid" fill="none" stroke="#333333" stroke-width="1" stroke-linejoin="round" stroke-linecap="round">',
+            ...grid.map((vertices, level) => `<path id="Hexagon-${level + 1}" d="${path(vertices)}"/>`),
+            '</g>',
+            '<g id="Gradient-faces">', ...faces, '</g>',
+            '</svg>'
+        ].join('\n');
+    }
+
+    private drawTextPattern(text: string) {
+        const { points, colors } = this.getTextPattern(text);
 
         if (points.length >= 3) {
             this.triangleCtx.save();
