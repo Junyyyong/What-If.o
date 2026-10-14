@@ -134,7 +134,8 @@ function ArchivePage({ openChar, search, characters }: {
     let arr = [...characters];
     if (search) arr = arr.filter(c =>
       c.name.toLowerCase().includes(search.toLowerCase()) ||
-      c.creator.toLowerCase().includes(search.toLowerCase())
+      c.creator.toLowerCase().includes(search.toLowerCase()) ||
+      c.creatorLabel?.toLowerCase().includes(search.toLowerCase())
     );
     if (sort === 'alphabetical') {
       arr.sort((a, b) => {
@@ -170,7 +171,7 @@ function ArchivePage({ openChar, search, characters }: {
             <div key={char.id} className={`arc-entry${clickable ? ' clickable' : ''}`}
               onClick={() => clickable && openChar(char)}>
               <span className={char.placeholder ? 'strike' : ''}>{char.name}</span>
-              <span className="arc-creator">{char.creator}</span>
+              <span className="arc-creator" title={char.creator}>{char.creatorLabel ?? char.creator}</span>
               <span className="arc-year">{char.year}</span>
             </div>
           );
@@ -226,8 +227,8 @@ function PreviewPage({ openChar, search, characters }: {
                     decoding="async"
                   />
                 : <div className="prev-img prev-ph" />}
-              <div className={`prev-label${char.placeholder ? ' strike' : ''}`}>
-                {char.creator}, 〈{char.name}〉, {char.year}.
+              <div className={`prev-label${char.placeholder ? ' strike' : ''}`} title={char.creator}>
+                {char.creatorLabel ?? char.creator}, 〈{char.name}〉, {char.year}.
               </div>
             </div>
           );

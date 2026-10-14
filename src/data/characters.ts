@@ -4,6 +4,7 @@ export interface Character {
   category: 'Hero' | 'Villain' | 'Support' | 'Neutral';
   year: number;
   creator: string;
+  creatorLabel?: string; // 목록에 표시할 짧은 작가명 (creator는 원래 이름 유지)
   placeholder: boolean;
   pinned?: boolean;     // pinned = 아카이브 맨 위에 고정
   thumbnail?: string;   // preview 그리드 이미지
@@ -54,4 +55,12 @@ export const characters: Character[] = [
   { id: 'WI-026', name: 'Mote',    category: 'Neutral', year: 2026, creator: 'hwajin',   placeholder: false, thumbnail: '/characters/Mote_hwajin_2026.webp' },
   { id: 'WI-027', name: 'Nosey',   category: 'Neutral', year: 2026, creator: 'sanghyeob', placeholder: false, thumbnail: '/characters/Nosey_sanghyeob_2026.webp', detail: '/characters/link/link_Nosey_sanghyeob_2026.webp', instagram: 'https://www.instagram.com/nose.monster/', interaction: 'https://noseytypegenerator.netlify.app/' },
   { id: 'WI-028', name: 'Recorder', category: 'Neutral', year: 2026, creator: 'eun',     placeholder: false, thumbnail: '/characters/Recorder_eun_2026.webp', detail: '/characters/link/link_Recorder_eun_2026.webp' },
+  { id: 'WI-029', name: 'PEEKY', category: 'Neutral', year: 2026, creator: 'Yujin Kim', creatorLabel: 'Y. Kim', placeholder: false, thumbnail: '/characters/PEEKY_YujinKim_2026.webp' },
+  { id: 'WI-030', name: 'Noodle', category: 'Neutral', year: 2026, creator: 'MEIXUAN LI', creatorLabel: 'M. Li', placeholder: false, thumbnail: '/characters/Noodle_MEIXUANLI_2026.webp' },
+  { id: 'WI-031', name: 'MOA', category: 'Neutral', year: 2026, creator: 'Jeongheewon', creatorLabel: 'JHW', placeholder: false, thumbnail: '/characters/MOA_Jeongheewon_2026.webp' },
+  { id: 'WI-032', name: 'TAKORU', category: 'Neutral', year: 2026, creator: 'MAHANZHANG', creatorLabel: 'MHZ', placeholder: false, thumbnail: '/characters/TAKORU_MAHANZHANG_2026.webp' },
+  { id: 'WI-033', name: 'BYEOLMONG', category: 'Neutral', year: 2026, creator: 'ARA', placeholder: false, thumbnail: '/characters/BYEOLMONG_ARA_2026.webp' },
+  { id: 'WI-034', name: 'Clink', category: 'Neutral', year: 2026, creator: 'KimJoonWoo', creatorLabel: 'KJW', placeholder: false, thumbnail: '/characters/Clink_KimJoonWoo_2026.webp' },
+  { id: 'WI-035', name: 'FLUU', category: 'Neutral', year: 2026, creator: 'PhamThiDuyen', creatorLabel: 'PTD', placeholder: false, thumbnail: '/characters/FLUU_PhamThiDuyen_2026.webp' },
+  { id: 'WI-036', name: 'PPOMONG', category: 'Neutral', year: 2026, creator: 'LINCHANGQING', creatorLabel: 'LCQ', placeholder: false, thumbnail: '/characters/PPOMONG_LINCHANGQING_2026.webp' },
 ];
