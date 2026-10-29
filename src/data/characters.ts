@@ -63,4 +63,5 @@ export const characters: Character[] = [
   { id: 'WI-034', name: 'Clink', category: 'Neutral', year: 2026, creator: 'KimJoonWoo', creatorLabel: 'KJW', placeholder: false, thumbnail: '/characters/Clink_KimJoonWoo_2026.webp' },
   { id: 'WI-035', name: 'FLUU', category: 'Neutral', year: 2026, creator: 'PhamThiDuyen', creatorLabel: 'PTD', placeholder: false, thumbnail: '/characters/FLUU_PhamThiDuyen_2026.webp' },
   { id: 'WI-036', name: 'PPOMONG', category: 'Neutral', year: 2026, creator: 'LINCHANGQING', creatorLabel: 'LCQ', placeholder: false, thumbnail: '/characters/PPOMONG_LINCHANGQING_2026.webp' },
+  { id: 'WI-037', name: 'JJUBI', category: 'Neutral', year: 2026, creator: 'Kim Jungeun', creatorLabel: 'J. Kim', placeholder: false, thumbnail: '/characters/JJUBI_KimJungeun_2026.webp' },
 ];
